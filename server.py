@@ -191,16 +191,16 @@ def venues():
 @app.route('/venue/<vid>')
 def venue(vid):
   cursor = g.conn.execute("SELECT T.date, M.name, T.starttime FROM Movie M NATURAL JOIN Shows S NATURAL JOIN Timing T WHERE vid={vid}".format(vid=vid))
-  # venue_shows = []
-  # for result in cursor:
-  #   row = [result["date"], result["name"], result["startime"]]
-  #   venue_shows.append(row)
-  # print(venue_shows)
+  venue_shows = []
+  for result in cursor:
+    row = [result["date"], result["name"], result["starttime"]]
+    venue_shows.append(row)
+  print(venue_shows)
   cursor.close()
-  # context = dict(data = venue_shows)
-  # return render_template("venue.html", **context)
+  context = dict(data = venue_shows)
+  return render_template("venue.html", **context)
 
-  return render_template("another.html")
+  # return render_template("another.html")
 
 
 if __name__ == "__main__":
