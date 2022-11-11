@@ -181,7 +181,7 @@ def venue():
   cursor = g.conn.execute("SELECT name FROM Venue")
   venue_names = []
   for result in cursor:
-    venue_names.append(result["venuename"])
+    venue_names.append(result["name"])
   print(venue_names)
   cursor.close()
   context = dict(data = venue_names)
