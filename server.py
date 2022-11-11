@@ -177,7 +177,7 @@ def login():
     abort(401)
     this_is_never_executed()
 
-@app.route('/venue')
+@app.route('/venues')
 def venues():
   cursor = g.conn.execute("SELECT name FROM Venue")
   venue_names = []
