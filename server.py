@@ -176,16 +176,16 @@ def login():
     abort(401)
     this_is_never_executed()
 
-@app.route('/theatre')
-def theatre():
-  cursor = g.conn.execute("SELECT theatrename FROM Theatre")
-  theatre_names = []
+@app.route('/venue')
+def venue():
+  cursor = g.conn.execute("SELECT name FROM Venue")
+  venue_names = []
   for result in cursor:
-    theatre_names.append(result["theatrename"])
-  print(theatre_names)
+    venue_names.append(result["venuename"])
+  print(venue_names)
   cursor.close()
-  context = dict(data = theatre_names)
-  return render_template("theatre.html", **context)
+  context = dict(data = venue_names)
+  return render_template("venue.html", **context)
 
 
 if __name__ == "__main__":
