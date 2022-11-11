@@ -8,6 +8,7 @@ Go to http://localhost:8111 in your browser.
 A debugger such as "pdb" may be helpful for debugging.
 Read about it online.
 """
+from html import escape
 import os
   # accessible as a variable in index.html:
 from sqlalchemy import *
@@ -177,7 +178,7 @@ def login():
     this_is_never_executed()
 
 @app.route('/venue')
-def venue():
+def venues():
   cursor = g.conn.execute("SELECT name FROM Venue")
   venue_names = []
   for result in cursor:
@@ -185,6 +186,18 @@ def venue():
   print(venue_names)
   cursor.close()
   context = dict(data = venue_names)
+  return render_template("venues.html", **context)
+
+@app.route('/venue/<vid>')
+def venue(vid):
+  cursor = g.conn.execute("SELECT T.date, M.name, T.starttime FROM Movie NATURAL JOIN Shows NATURAL JOIN Timings WHERE vid={vid}".format(vid=vid))
+  venue_shows = []
+  for result in cursor:
+    row = [result["date"], result["name"], result["startime"]]
+    venue_shows.append(row)
+  print(venue_shows)
+  cursor.close()
+  context = dict(data = venue_shows)
   return render_template("venue.html", **context)
 
 
