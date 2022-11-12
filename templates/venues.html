@@ -11,7 +11,7 @@
   <h1>All the venues showing a movie</h1>
   <div>
     {% for n in data %}
-      <div>{{n[0]}} {{url_for(request.endpoint) + "/" + str(n[1]}}</div>
+      <div>{{n[0]}} {{url_for(request.endpoint) + "/" + str(n[1])}}</div>
     {% endfor %}
   </div>
 
