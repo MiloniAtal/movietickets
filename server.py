@@ -200,7 +200,7 @@ def venue(vid):
   
   cursor2 = g.conn.execute("SELECT location, name FROM Venue WHERE vid={vid}".format(vid=vid))
   venue_details = []
-  for result in cursor:
+  for result in cursor2:
     row = [result["location"], result["name"]]
     venue_details.append(row)
   cursor2.close()
