@@ -9,11 +9,11 @@
 
 <body>
   <h1>All movies running in the venue</h1>
-  <!-- <div>{{data}}</div> -->
+  <div>{{details}}</div>
 
   <div>
     {% for show in data %}
-    <div>{{show[0].strftime('%m/%d/%Y')}}  {{show[1]}}  {{show[2].strftime('%H:%M:%S')}}</div>
+    <div>{{show[0].strftime('%m/%d/%Y')}}  {{show[1]}}  {{show[2].strftime('%H:%M')}}</div>
     {% endfor %}
   </div>
 
