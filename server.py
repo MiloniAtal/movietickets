@@ -190,7 +190,7 @@ def venues():
 
 @app.route('/venue/<vid>')
 def venue(vid):
-  cursor = g.conn.execute("SELECT T.date, M.name, T.starttime FROM Movie M NATURAL JOIN Shows S NATURAL JOIN Timing T WHERE vid={vid}".format(vid=vid))
+  cursor = g.conn.execute("SELECT T.date, M.name, T.starttime FROM Movie M NATURAL JOIN Shows S NATURAL JOIN Timing T WHERE vid={vid} ORDER BY T.date, M.name, T.starttime ASC".format(vid=vid))
   venue_shows = []
   for result in cursor:
     row = [result["date"], result["name"], result["starttime"]]
