@@ -179,10 +179,11 @@ def login():
 
 @app.route('/venues')
 def venues():
-  cursor = g.conn.execute("SELECT DISTINCT V.name FROM Venue V NATURAL JOIN Shows S")
+  cursor = g.conn.execute("SELECT DISTINCT V.name, V.vid FROM Venue V NATURAL JOIN Shows S")
   venue_names = []
   for result in cursor:
-    venue_names.append(result["name"])
+    row = [result["name"], result["vid"]]
+    venue_names.append(row)
   print(venue_names)
   cursor.close()
   context = dict(data = venue_names)
@@ -201,8 +202,8 @@ def venue(vid):
   cursor2 = g.conn.execute("SELECT location, name FROM Venue WHERE vid={vid}".format(vid=vid))
   venue_details = []
   for result in cursor2:
-    row = [result["location"], result["name"]]
-    venue_details.append(row)
+    venue_details.append(result["location"])
+    venue_details.append(result["name"])
   cursor2.close()
   context = dict(data = venue_shows, details = venue_details)
   return render_template("venue.html", **context)
