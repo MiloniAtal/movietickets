@@ -177,7 +177,7 @@ def login():
     abort(401)
     this_is_never_executed()
 
-@app.route('/venues')
+@app.route('/venue')
 def venues():
   cursor = g.conn.execute("SELECT DISTINCT V.name, V.vid FROM Venue V NATURAL JOIN Shows S")
   venue_names = []
