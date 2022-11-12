@@ -12,8 +12,8 @@
   <!-- <div>{{data}}</div> -->
 
   <div>
-    {% for n in data %}
-    <div>{{n}}</div>
+    {% for show in data %}
+    <div>{{show[0].strftime('%Y-%m-%d')}}, {show[1]}} </div>
     {% endfor %}
   </div>
 
