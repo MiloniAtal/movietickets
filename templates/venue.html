@@ -8,8 +8,8 @@
 
 
 <body>
-  <h1>All movies running in the venue: {{details[1]}}</h1>
-  <div>Location: {{details[0]}}</div>
+  <h1>All movies running in the venue: {{details[0][1]}}</h1>
+  <div>Location: {{details[0][0]}}</div>
 
   <div>
     {% for show in data %}
