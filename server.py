@@ -150,6 +150,20 @@ def index():
   #
   return render_template("index.html", **context)
 
+
+@app.route('/home')
+def home():
+  cursor = g.conn.execute("SELECT name,stars FROM movie")
+  data = []
+  for result in cursor:
+    data.append({'name':result['name'], 'stars':result['stars']})  # can also be accessed using result[0]
+  cursor.close()
+
+  context = dict(data=data)
+  return render_template("home.html", **context)
+
+
+
 #
 # This is an example of a different path.  You can see it at:
 #
