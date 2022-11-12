@@ -12,7 +12,7 @@
   <div>
     {% for n in data %}
       {% set my_url = url_for(request.endpoint) ~ '/' ~ n[1] %}
-      <div><a href="/venue/3001"> {{n[0]}}</a> </div>
+      <div><a href={{my_url}}> {{n[0]}}</a> </div>
     {% endfor %}
   </div>
 
