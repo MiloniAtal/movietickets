@@ -26,7 +26,7 @@
             <select class="custom-select mr-sm-2" id="inlineFormCustomSelect">
               <option selected>Choose Seat</option>
               {% for seat in data %}
-              <option value="SeatNumber">Seatnumber: {{seat[0]}}, Price: {{seat[1]}}</option>
+              <option value="SeatNumber" name="SeatNumber">Seatnumber: {{seat[0]}}, Price: {{seat[1]}}</option>
               {% endfor %}
             </select>
           </div>
