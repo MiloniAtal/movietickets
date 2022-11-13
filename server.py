@@ -191,10 +191,11 @@ def venues_search():
 
 @app.route('/venue_search/<vid>')
 def venue_search(vid):
-  cursor = g.conn.execute("SELECT T.date, M.name, T.starttime, theatrename FROM Movie M NATURAL JOIN Shows S NATURAL JOIN Timing T WHERE vid={vid} ORDER BY T.date, M.name, theatrename, T.starttime ASC".format(vid=vid))
+  cursor = g.conn.execute("SELECT T.date, M.name, T.starttime, theatrename, mid, vid, sid FROM Movie M NATURAL JOIN Shows S NATURAL JOIN Timing T WHERE vid={vid} ORDER BY T.date, M.name, theatrename, T.starttime ASC".format(vid=vid))
   venue_shows = []
   for result in cursor:
-    row = [result["date"], result["name"], result["starttime"], result["theatrename"]]
+    link = [result["mid"], result["vid"], result["theatrename"], result["sid"]]
+    row = [result["date"], result["name"], result["starttime"], result["theatrename"], link]
     venue_shows.append(row)
   print(venue_shows)
   cursor.close()
