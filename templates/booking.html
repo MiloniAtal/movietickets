@@ -23,7 +23,7 @@
         <form action="/number" method="post">
           <div class="form-row align-items-center">
             <label class="mr-sm-2" for="inlineFormCustomSelect">Preference</label>
-            <select class="custom-select mr-sm-2" id="inlineFormCustomSelect" name="inlineFormCustomSelect">
+            <select class="custom-select mr-sm-2" id="SeatNumber" name="SeatNumber">
               <option selected>Choose Seat</option>
               {% for seat in data %}
               <option value="{{seat[0]}}">Seatnumber: {{seat[0]}}, Price: {{seat[1]}}</option>

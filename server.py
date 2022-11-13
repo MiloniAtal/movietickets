@@ -262,10 +262,8 @@ def booking_complete(mid, vid, theatrename, sid, seatnumber):
 def number():
   if request.method == 'POST':
         result = request.form
-        json_result = dict(result)
-        print(json_result)
-        Id = request.form.get("SeatNumber","")
-        print(Id)
+        seatnumber = request.form.get("SeatNumber","")
+        print(seatnumber)
         return render_template("booking_complete.html")
 
 if __name__ == "__main__":
