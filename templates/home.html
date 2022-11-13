@@ -23,7 +23,7 @@
   
   <div class="container">
   
-    {% for n in data %}
+    {% for n in data.movies %}
     <div class="row">
       <div class = "col-sm">{{n.name}}</div>
       <div class = "col-sm">{{n.stars}}</div>
@@ -32,7 +32,23 @@
    
   </div>
   
+ <hr>
+ <hr>
+ <hr>
+
+ <div class="container">
+  
+  {% for n in data.venues %}
+  <div class="row">
+    <div class = "col-sm">{{n.name}}</div>
+    <div class = "col-sm">{{n.stars}}</div>
+  </div>
+  {% endfor %}
  
+</div>
+
+
+
   </div>
 </div>
   

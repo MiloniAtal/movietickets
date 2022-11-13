@@ -159,7 +159,13 @@ def home():
     data.append({'name':result['name'], 'stars':result['stars']})  # can also be accessed using result[0]
   cursor.close()
 
-  context = dict(data=data)
+  cursor = g.conn.execute("SELECT name,location FROM venue")
+  data2 = []
+  for result in cursor:
+    data2.append({'name':result['name'], 'location':result['location']})  # can also be accessed using result[0]
+  cursor.close()
+
+  context = dict(movies=data, venues=data2 )
   return render_template("home.html", **context)
 
 
