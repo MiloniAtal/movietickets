@@ -20,7 +20,8 @@
     {% if data|length == 0 %}
         <div class="text-centre">No seats available</div>
     {% else%}
-        <form action="/number" method="post">
+        {% set cur_url = url_for(request.endpoint, **request.view_args)%}
+        <form action={{cur_url}} method="post">
           <div class="form-row align-items-center">
             <label class="mr-sm-2" for="inlineFormCustomSelect">Preference</label>
             <select class="custom-select mr-sm-2" id="SeatNumber" name="SeatNumber">
