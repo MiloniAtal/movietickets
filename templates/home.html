@@ -23,7 +23,7 @@
   
   <div class="container">
   
-    {% for n in data.movies %}
+    {% for n in movies %}
     <div class="row">
       <div class = "col-sm">{{n.name}}</div>
       <div class = "col-sm">{{n.stars}}</div>
@@ -38,10 +38,10 @@
 
  <div class="container">
   
-  {% for n in data.venues %}
+  {% for n in venues %}
   <div class="row">
     <div class = "col-sm">{{n.name}}</div>
-    <div class = "col-sm">{{n.stars}}</div>
+    <div class = "col-sm">{{n.location}}</div>
   </div>
   {% endfor %}
  
