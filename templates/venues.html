@@ -12,13 +12,13 @@
 </style>
 
 <body>
-  <h1>All the venues showing a movie</h1>
+  <h1 class="display-2">All the venues showing a movie</h1>
   <div class="container">
   
     {% for n in data %}
     <div class="row">
       {% set my_url = url_for(request.endpoint) ~ '/' ~ n[1] %}
-      <div class = "col-sm"><a href={{my_url}}> {{n[0]}}</a></div>
+      <div><a href={{my_url}}> {{n[0]}}</a></div>
     </div>
     {% endfor %}
    
