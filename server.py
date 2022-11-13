@@ -259,7 +259,7 @@ def booking_complete(mid, vid, theatrename, sid, seatnumber):
   return render_template("booking_complete.html")
 
 @app.route('/number', methods=["GET", "POST"])
-def index():
+def number():
   if len(request.form) > 0:
     number =  request.form["SeatNumber"]
   print(number)
