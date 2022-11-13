@@ -12,30 +12,29 @@
 
 <body>
   <div class="container">
-    <h1>Works!</h1>
     <h2 class="text-center">All venues running the movie: {{details[0]}}</h2>
-    <h3 class="text-center">Description: {{details[1]}}</h3>
+    <h6 class="text-center">Description: {{details[1]}}</h6>
+    
+    {% if data|length == 0 %}
+        <div>No venues to show</div>
+    {% else%}
+        <div class="row">
+        <div class="col-sm">Date</div>
+        <div class="col-sm">Venue</div>
+        <div class="col-sm">Hall</div>
+        <div class="col-sm">Time</div>
+        </div>
+        {% for show in data %}
+        <div class="row">
+        <div class="col-sm">{{show[0].strftime('%m/%d/%Y')}}  </div>
+        <div class="col-sm">{{show[1]}} </div>
+        <div class="col-sm">{{show[3]}}</div>
+        <div class="col-sm">{{show[2].strftime('%H:%M')}}</div>
+        </div>
+        {% endfor %}
 
-    <div class="row">
-      <div class="col-sm">Date</div>
-      <div class="col-sm">Venue</div>
-      <div class="col-sm">Hall</div>
-      <div class="col-sm">Time</div>
-    </div>
-    {% for show in data %}
-    <div class="row">
-      <div class="col-sm">{{show[0].strftime('%m/%d/%Y')}}  </div>
-      <div class="col-sm">{{show[1]}} </div>
-      <div class="col-sm">{{show[3]}}</div>
-      <div class="col-sm">{{show[2].strftime('%H:%M')}}</div>
-    </div>
-    {% endfor %}
-
-    <div>
-      {% if data|length == 0 %}
-      <div>No venues to show</div>
-      {% endif %}
-    </div>
+    {% endif %}
+    
   </div>
   
 
