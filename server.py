@@ -254,6 +254,9 @@ def booking(mid, vid, theatrename, sid):
   context = dict(data = available_seats, details = booking_details)
   return render_template("booking.html", **context)
 
+@app.route('/booking/<mid>/<vid>/<theatrename>/<sid>/<seatnumber>')
+def booking(mid, vid, theatrename, sid, seatnumber):
+  return render_template("booking_complete.html")
 
 
 if __name__ == "__main__":

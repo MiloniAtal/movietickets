@@ -12,37 +12,12 @@
 <body>
   
   <div class="container">
-    <h1>Movie: {{details[0]}}</h1>
+    <h1>Booking Successful</h1>
+    <!-- <h1>Movie: {{details[0]}}</h1>
     <h2>Venue: {{details[1]}}, Hall {{details[2]}}</h2>
     <h2>Date: {{details[3].strftime('%m/%d/%Y')}}, Start-Time: {{details[4].strftime('%H:%M')}} , End-Time: {{details[5].strftime('%H:%M')}}</h2>
-    
-    <h3>Available seats</h3>
-    {% if data|length == 0 %}
-        <div class="text-centre">No seats available</div>
-    {% else%}
-        <!-- <div class="row">
-        <div class="col-sm">Seat Number</div>
-        <div class="col-sm">Price</div>
-        </div>
-        {% for seat in data %}
-        <div class="row">
-        <div class="col-sm">{{seat[0]}}  </div>
-        <div class="col-sm">{{seat[1]}} </div>
-        </div>
-        {% endfor %} -->
-        
-        <div class="dropdown">
-          <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            Choose Seat
-          </button>
-          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-            {% for seat in data %}
-              {% set my_url = url_for(request.endpoint) ~ '/' ~ seat[0] %}
-              <a class="dropdown-item" href={{my_url}}>Seatnumber: {{seat[0]}}, Price: {{seat[1]}} </a>
-            {% endfor %}
-          </div>
-        </div>
-    {% endif %}
+     -->
+
   </div>
 
   
