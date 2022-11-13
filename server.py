@@ -258,15 +258,15 @@ def booking(mid, vid, theatrename, sid):
 def booking_complete(mid, vid, theatrename, sid, seatnumber):
   return render_template("booking_complete.html")
 
-@app.route('/number', methods=["GET", "POST"])
-def number():
-  if request.method == 'POST':
-        result = request.form
-        json_result = dict(result)
-        print(json_result)
-        Id = request.form.get("SeatNumber","")
-        print(Id)
-        return render_template("booking_complete.html")
+# @app.route('/number', methods=["GET", "POST"])
+# def number():
+#   if request.method == 'POST':
+#         result = request.form
+#         json_result = dict(result)
+#         print(json_result)
+#         Id = request.form.get("SeatNumber","")
+#         print(Id)
+#         return render_template("booking_complete.html")
 
 if __name__ == "__main__":
   import click
