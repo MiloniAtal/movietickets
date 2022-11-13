@@ -260,10 +260,11 @@ def booking_complete(mid, vid, theatrename, sid, seatnumber):
 
 @app.route('/number', methods=["GET", "POST"])
 def number():
-  if len(request.form) > 0:
-    number =  request.form["SeatNumber"]
-  print(number)
-  return render_template("booking_complete.html")
+  if request.method == 'POST':
+        result = request.form
+        json_result = dict(result)
+        print(json_result)
+        return render_template("booking_complete.html")
 
 if __name__ == "__main__":
   import click
