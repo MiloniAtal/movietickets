@@ -178,7 +178,7 @@ def login():
     this_is_never_executed()
 
 @app.route('/venue_search')
-def venues():
+def venues_search():
   cursor = g.conn.execute("SELECT DISTINCT V.name, V.vid FROM Venue V NATURAL JOIN Shows S")
   venue_names = []
   for result in cursor:
@@ -187,10 +187,10 @@ def venues():
   print(venue_names)
   cursor.close()
   context = dict(data = venue_names)
-  return render_template("venues.html", **context)
+  return render_template("venues_search.html", **context)
 
 @app.route('/venue_search/<vid>')
-def venue(vid):
+def venue_search(vid):
   cursor = g.conn.execute("SELECT T.date, M.name, T.starttime, theatrename FROM Movie M NATURAL JOIN Shows S NATURAL JOIN Timing T WHERE vid={vid} ORDER BY T.date, M.name, theatrename, T.starttime ASC".format(vid=vid))
   venue_shows = []
   for result in cursor:
@@ -206,28 +206,28 @@ def venue(vid):
     venue_details.append(result["name"])
   cursor2.close()
   context = dict(data = venue_shows, details = venue_details)
-  return render_template("venue.html", **context)
+  return render_template("venue_search.html", **context)
 
   # return render_template("another.html")
 
-# @app.route('/movie_search/<mid>')
-# def venue(vid):
-#   cursor = g.conn.execute("SELECT T.date, M.name, T.starttime FROM Movie M NATURAL JOIN Shows S NATURAL JOIN Timing T WHERE mid={mid} ORDER BY T.date, M.name, T.starttime ASC".format(vid=vid))
-#   venue_shows = []
-#   for result in cursor:
-#     row = [result["date"], result["name"], result["starttime"]]
-#     venue_shows.append(row)
-#   print(venue_shows)
-#   cursor.close()
+@app.route('/movie_search/<mid>')
+def venue(mid):
+  cursor = g.conn.execute("SELECT T.date, V.name, theatrename, T.starttime FROM Shows S NATURAL JOIN Timing T NATURAL JOIN Venue V WHERE mid ={mid} ORDER BY T.date, V.name, theatrename, T.starttime".format(mid=mid))
+  movie_shows = []
+  for result in cursor:
+    row = [result["date"], result["name"], result["starttime"], result["theatrename"]]
+    movie_shows.append(row)
+  print(movie_shows)
+  cursor.close()
   
-#   cursor2 = g.conn.execute("SELECT location, name FROM Venue WHERE vid={vid}".format(vid=vid))
-#   venue_details = []
-#   for result in cursor2:
-#     venue_details.append(result["location"])
-#     venue_details.append(result["name"])
-#   cursor2.close()
-#   context = dict(data = venue_shows, details = venue_details)
-#   return render_template("venue.html", **context)
+  cursor2 = g.conn.execute("SELECT name, description FROM Movie WHERE mid={mid}".format(mid=mid))
+  movie_details = []
+  for result in cursor2:
+    movie_details.append(result["name"])
+    movie_details.append(result["description"])
+  cursor2.close()
+  context = dict(data = movie_shows, details = movie_details)
+  return render_template("movie_search.html", **context)
 
 if __name__ == "__main__":
   import click
