@@ -245,7 +245,7 @@ def booking(mid, vid, theatrename, sid):
     booking_details.append(result["starttime"])
     booking_details.append(result["endtime"])
   
-  cursor = g.conn.execute("SELECT seatnumber, price FROM SEAT  WHERE theatrename like '{theatrename}' AND vid={vid} EXCEPT SELECT seatnumber, price FROM SEAT NATURAL JOIN Ticket WHERE theatrename like {theatrename} AND vid={vid} ORDER BY price, seatnumber".format(theatrename=theatrename, vid=vid))
+  cursor = g.conn.execute("SELECT seatnumber, price FROM SEAT  WHERE theatrename like '{theatrename}' AND vid={vid} EXCEPT SELECT seatnumber, price FROM SEAT NATURAL JOIN Ticket WHERE theatrename like '{theatrename}' AND vid={vid} ORDER BY price, seatnumber".format(theatrename=theatrename, vid=vid))
   available_seats = []
   for result in cursor:
     row = [result["seatnumber"], result["price"]]
