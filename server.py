@@ -231,21 +231,21 @@ def venue(mid):
 
 @app.route('/booking/<mid>/<vid>/<theatrename>/<sid>', methods=["GET", "POST"])
 def booking(mid, vid, theatrename, sid):
+  booking_details = []
+  cursor = g.conn.execute("SELECT name FROM Movie WHERE mid={mid}".format(mid=mid))
+  for result in cursor:
+    booking_details.append(result["name"])
+  cursor = g.conn.execute("SELECT name FROM Venue WHERE vid={vid}".format(vid=vid))
+  for result in cursor:
+    booking_details.append(result["name"])
+  booking_details.append(theatrename)
+  cursor = g.conn.execute("SELECT date, starttime, endtime FROM Timing WHERE sid={sid}".format(sid=sid))
+  for result in cursor:
+    booking_details.append(result["date"])
+    booking_details.append(result["starttime"])
+    booking_details.append(result["endtime"])
+  cursor.close()
   if request.method == 'GET':
-    booking_details = []
-    cursor = g.conn.execute("SELECT name FROM Movie WHERE mid={mid}".format(mid=mid))
-    for result in cursor:
-      booking_details.append(result["name"])
-    cursor = g.conn.execute("SELECT name FROM Venue WHERE vid={vid}".format(vid=vid))
-    for result in cursor:
-      booking_details.append(result["name"])
-    booking_details.append(theatrename)
-    cursor = g.conn.execute("SELECT date, starttime, endtime FROM Timing WHERE sid={sid}".format(sid=sid))
-    for result in cursor:
-      booking_details.append(result["date"])
-      booking_details.append(result["starttime"])
-      booking_details.append(result["endtime"])
-    
     cursor = g.conn.execute("SELECT seatnumber, price FROM SEAT  WHERE theatrename like '{theatrename}' AND vid={vid} EXCEPT SELECT seatnumber, price FROM SEAT NATURAL JOIN Ticket WHERE theatrename like '{theatrename}' AND vid={vid} ORDER BY price, seatnumber".format(theatrename=theatrename, vid=vid))
     available_seats = []
     for result in cursor:
@@ -258,8 +258,9 @@ def booking(mid, vid, theatrename, sid):
   if request.method == 'POST':
     result = request.form
     seatnumber = request.form.get("SeatNumber","")
-    print(seatnumber)
-    return render_template("booking_complete.html")
+    booking_details.append(seatnumber)
+    context = dict(details = booking_details)
+    return render_template("booking_complete.html",**context)
   
 
 if __name__ == "__main__":

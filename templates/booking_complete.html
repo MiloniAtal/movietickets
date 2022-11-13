@@ -13,7 +13,11 @@
   
   <div class="container">
     <h1>Booking Successful</h1>
-
+    <h2>Here are your booking details</h2>
+    <h2>Movie: {{details[0]}}</h1>
+    <h2>Venue: {{details[1]}}, Hall {{details[2]}}</h2>
+    <h2>Date: {{details[3].strftime('%m/%d/%Y')}}, Start-Time: {{details[4].strftime('%H:%M')}} , End-Time: {{details[5].strftime('%H:%M')}}</h2>
+    <h2>Seat Number: {{details[6]}}</h2>
   </div>
 
   
