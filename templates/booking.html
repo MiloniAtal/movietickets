@@ -37,7 +37,7 @@
           </button>
           <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
             {% for seat in data %}
-              {% set my_url = url_for(request.endpoint) ~ '/' ~ seat[0] %}
+              {% set my_url = url_for(request.endpoint, **request.view_args) ~ '/' ~ seat[0] %}
               <a class="dropdown-item" href={{my_url}}>Seatnumber: {{seat[0]}}, Price: {{seat[1]}} </a>
             {% endfor %}
           </div>
