@@ -20,39 +20,19 @@
     {% if data|length == 0 %}
         <div class="text-centre">No seats available</div>
     {% else%}
-        <!-- <div class="row">
-        <div class="col-sm">Seat Number</div>
-        <div class="col-sm">Price</div>
-        </div>
-        {% for seat in data %}
-        <div class="row">
-        <div class="col-sm">{{seat[0]}}  </div>
-        <div class="col-sm">{{seat[1]}} </div>
-        </div>
-        {% endfor %} -->
-        
-        <div class="dropdown">
-          <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            Choose Seat
-          </button>
-          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-            {% for seat in data %}
-              {% set my_url = url_for(request.endpoint, **request.view_args) ~ '/' ~ seat[0] %}
-              <a class="dropdown-item" href={{my_url}}>Seatnumber: {{seat[0]}}, Price: {{seat[1]}} </a>
-            {% endfor %}
-          </div>
-        </div>
-        <form>
+        <form action="/number" method="post">
           <div class="form-row align-items-center">
             <label class="mr-sm-2" for="inlineFormCustomSelect">Preference</label>
             <select class="custom-select mr-sm-2" id="inlineFormCustomSelect">
               <option selected>Choose Seat</option>
               {% for seat in data %}
-              <option value="{{seat[0]}}">Seatnumber: {{seat[0]}}, Price: {{seat[1]}}</option>
+              <option value="SeatNumber">Seatnumber: {{seat[0]}}, Price: {{seat[1]}}</option>
               {% endfor %}
             </select>
           </div>
-          <button type="submit" class="btn btn-primary">Submit</button>
+          <div class="form-row align-items-center">
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </div>
         </form>
     {% endif %}
   </div>
