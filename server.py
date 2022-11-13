@@ -244,8 +244,14 @@ def booking(mid, vid, theatrename, sid):
     booking_details.append(result["date"])
     booking_details.append(result["starttime"])
     booking_details.append(result["endtime"])
+  
+  cursor = g.conn.execute("SELECT seatnumber, price FROM SEAT  WHERE theatrename like {theatrename} AND vid={vid} EXCEPT SELECT seatnumber, price FROM SEAT NATURAL JOIN Ticket WHERE theatrename like {theatrename} AND vid={vid} ORDER BY price, seatnumber".format(theatrename=theatrename, vid=vid))
+  available_seats = []
+  for result in cursor:
+    row = [result["seatnumber"], result["price"]]
+    available_seats.append(row)
   cursor.close()
-  context = dict(data = [], details = booking_details)
+  context = dict(data = available_seats, details = booking_details)
   return render_template("booking.html", **context)
 
 
