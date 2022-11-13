@@ -212,11 +212,12 @@ def venue_search(vid):
   # return render_template("another.html")
 
 @app.route('/movie_search/<mid>')
-def venue(mid):
-  cursor = g.conn.execute("SELECT T.date, V.name, theatrename, T.starttime FROM Shows S NATURAL JOIN Timing T NATURAL JOIN Venue V WHERE mid ={mid} ORDER BY T.date, V.name, theatrename, T.starttime".format(mid=mid))
+def movie_search(mid):
+  cursor = g.conn.execute("SELECT T.date, V.name, theatrename, T.starttime, mid, vid, sid FROM Shows S NATURAL JOIN Timing T NATURAL JOIN Venue V WHERE mid ={mid} ORDER BY T.date, V.name, theatrename, T.starttime".format(mid=mid))
   movie_shows = []
   for result in cursor:
-    row = [result["date"], result["name"], result["starttime"], result["theatrename"]]
+    link = [result["mid"], result["vid"], result["theatrename"], result["sid"]]
+    row = [result["date"], result["name"], result["starttime"], result["theatrename"], link]
     movie_shows.append(row)
   print(movie_shows)
   cursor.close()

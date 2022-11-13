@@ -29,7 +29,9 @@
         <div class="col-sm">{{show[0].strftime('%m/%d/%Y')}}  </div>
         <div class="col-sm">{{show[1]}} </div>
         <div class="col-sm">{{show[3]}}</div>
-        <div class="col-sm">{{show[2].strftime('%H:%M')}}</div>
+        {% set my_url = '/booking/' ~ show[4][0] ~ '/' ~ show[4][1] ~ '/' ~ show[4][2] ~ '/' ~ show[4][3] %}
+        {% set my_url_encoded = my_url | urlencode %}
+        <div class="col-sm"><a href={{my_url_encoded}}>{{show[2].strftime('%H:%M')}}</a></div>
         </div>
         {% endfor %}
 
