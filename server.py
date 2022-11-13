@@ -264,6 +264,8 @@ def number():
         result = request.form
         json_result = dict(result)
         print(json_result)
+        Id = request.form.get("SeatNumber","")
+        print(Id)
         return render_template("booking_complete.html")
 
 if __name__ == "__main__":
