@@ -233,12 +233,15 @@ def venue(mid):
 def booking(mid, vid, theatrename, sid):
   booking_details = []
   cursor = g.conn.execute("SELECT name FROM Movie WHERE mid={mid}".format(mid=mid))
-  booking_details.append(cursor[0]["name"])
+  for result in cursor:
+    booking_details.append(result["name"])
   cursor = g.conn.execute("SELECT name FROM Venue WHERE vid={vid}".format(vid=vid))
-  booking_details.append(cursor[0]["name"])
+  for result in cursor:
+    booking_details.append(result["name"])
   booking_details.append(theatrename)
   cursor = g.conn.execute("SELECT date, starttime, endtime FROM Timing WHERE sid={sid}".format(sid=sid))
-  booking_details.append(cursor[0]["name"])
+  for result in cursor:
+    booking_details.append(result["name"])
   cursor.close()
   context = dict(data = [], details = booking_details)
   return render_template("booking.html", **context)
