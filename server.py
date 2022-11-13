@@ -255,7 +255,7 @@ def booking(mid, vid, theatrename, sid):
   return render_template("booking.html", **context)
 
 @app.route('/booking/<mid>/<vid>/<theatrename>/<sid>/<seatnumber>')
-def booking(mid, vid, theatrename, sid, seatnumber):
+def booking_complete(mid, vid, theatrename, sid, seatnumber):
   return render_template("booking_complete.html")
 
 
