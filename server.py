@@ -177,7 +177,7 @@ def login():
     abort(401)
     this_is_never_executed()
 
-@app.route('/venue')
+@app.route('/venue_search')
 def venues():
   cursor = g.conn.execute("SELECT DISTINCT V.name, V.vid FROM Venue V NATURAL JOIN Shows S")
   venue_names = []
@@ -189,12 +189,12 @@ def venues():
   context = dict(data = venue_names)
   return render_template("venues.html", **context)
 
-@app.route('/venue/<vid>')
+@app.route('/venue_search/<vid>')
 def venue(vid):
-  cursor = g.conn.execute("SELECT T.date, M.name, T.starttime FROM Movie M NATURAL JOIN Shows S NATURAL JOIN Timing T WHERE vid={vid} ORDER BY T.date, M.name, T.starttime ASC".format(vid=vid))
+  cursor = g.conn.execute("SELECT T.date, M.name, T.starttime, theatrename FROM Movie M NATURAL JOIN Shows S NATURAL JOIN Timing T WHERE vid={vid} ORDER BY T.date, M.name, T.starttime ASC".format(vid=vid))
   venue_shows = []
   for result in cursor:
-    row = [result["date"], result["name"], result["starttime"]]
+    row = [result["date"], result["name"], result["starttime"], result["theatrename"]]
     venue_shows.append(row)
   print(venue_shows)
   cursor.close()
@@ -210,6 +210,24 @@ def venue(vid):
 
   # return render_template("another.html")
 
+# @app.route('/movie_search/<mid>')
+# def venue(vid):
+#   cursor = g.conn.execute("SELECT T.date, M.name, T.starttime FROM Movie M NATURAL JOIN Shows S NATURAL JOIN Timing T WHERE mid={mid} ORDER BY T.date, M.name, T.starttime ASC".format(vid=vid))
+#   venue_shows = []
+#   for result in cursor:
+#     row = [result["date"], result["name"], result["starttime"]]
+#     venue_shows.append(row)
+#   print(venue_shows)
+#   cursor.close()
+  
+#   cursor2 = g.conn.execute("SELECT location, name FROM Venue WHERE vid={vid}".format(vid=vid))
+#   venue_details = []
+#   for result in cursor2:
+#     venue_details.append(result["location"])
+#     venue_details.append(result["name"])
+#   cursor2.close()
+#   context = dict(data = venue_shows, details = venue_details)
+#   return render_template("venue.html", **context)
 
 if __name__ == "__main__":
   import click
