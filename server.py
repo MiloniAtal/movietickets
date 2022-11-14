@@ -8,6 +8,7 @@ Go to http://localhost:8111 in your browser.
 A debugger such as "pdb" may be helpful for debugging.
 Read about it online.
 """
+from html import escape
 import os
   # accessible as a variable in index.html:
 from sqlalchemy import *
@@ -196,6 +197,93 @@ def login():
     abort(401)
     this_is_never_executed()
 
+@app.route('/venue_search')
+def venues_search():
+  cursor = g.conn.execute("SELECT DISTINCT V.name, V.vid FROM Venue V NATURAL JOIN Shows S")
+  venue_names = []
+  for result in cursor:
+    row = [result["name"], result["vid"]]
+    venue_names.append(row)
+  print(venue_names)
+  cursor.close()
+  context = dict(data = venue_names)
+  return render_template("venues_search.html", **context)
+
+@app.route('/venue_search/<vid>')
+def venue_search(vid):
+  cursor = g.conn.execute("SELECT T.date, M.name, T.starttime, theatrename, mid, vid, sid FROM Movie M NATURAL JOIN Shows S NATURAL JOIN Timing T WHERE vid={vid} ORDER BY T.date, M.name, theatrename, T.starttime ASC".format(vid=vid))
+  venue_shows = []
+  for result in cursor:
+    link = [result["mid"], result["vid"], result["theatrename"], result["sid"]]
+    row = [result["date"], result["name"], result["starttime"], result["theatrename"], link]
+    venue_shows.append(row)
+  print(venue_shows)
+  cursor.close()
+  
+  cursor2 = g.conn.execute("SELECT location, name FROM Venue WHERE vid={vid}".format(vid=vid))
+  venue_details = []
+  for result in cursor2:
+    venue_details.append(result["location"])
+    venue_details.append(result["name"])
+  cursor2.close()
+  context = dict(data = venue_shows, details = venue_details)
+  return render_template("venue_search.html", **context)
+
+  # return render_template("another.html")
+
+@app.route('/movie_search/<mid>')
+def movie_search(mid):
+  cursor = g.conn.execute("SELECT T.date, V.name, theatrename, T.starttime, mid, vid, sid FROM Shows S NATURAL JOIN Timing T NATURAL JOIN Venue V WHERE mid ={mid} ORDER BY T.date, V.name, theatrename, T.starttime".format(mid=mid))
+  movie_shows = []
+  for result in cursor:
+    link = [result["mid"], result["vid"], result["theatrename"], result["sid"]]
+    row = [result["date"], result["name"], result["starttime"], result["theatrename"], link]
+    movie_shows.append(row)
+  print(movie_shows)
+  cursor.close()
+  
+  cursor2 = g.conn.execute("SELECT name, description FROM Movie WHERE mid={mid}".format(mid=mid))
+  movie_details = []
+  for result in cursor2:
+    movie_details.append(result["name"])
+    movie_details.append(result["description"])
+  cursor2.close()
+  context = dict(data = movie_shows, details = movie_details)
+  return render_template("movie_search.html", **context)
+
+@app.route('/booking/<mid>/<vid>/<theatrename>/<sid>', methods=["GET", "POST"])
+def booking(mid, vid, theatrename, sid):
+  booking_details = []
+  cursor = g.conn.execute("SELECT name FROM Movie WHERE mid={mid}".format(mid=mid))
+  for result in cursor:
+    booking_details.append(result["name"])
+  cursor = g.conn.execute("SELECT name FROM Venue WHERE vid={vid}".format(vid=vid))
+  for result in cursor:
+    booking_details.append(result["name"])
+  booking_details.append(theatrename)
+  cursor = g.conn.execute("SELECT date, starttime, endtime FROM Timing WHERE sid={sid}".format(sid=sid))
+  for result in cursor:
+    booking_details.append(result["date"])
+    booking_details.append(result["starttime"])
+    booking_details.append(result["endtime"])
+  cursor.close()
+  if request.method == 'GET':
+    cursor = g.conn.execute("SELECT seatnumber, price FROM SEAT  WHERE theatrename like '{theatrename}' AND vid={vid} EXCEPT SELECT seatnumber, price FROM SEAT NATURAL JOIN Ticket WHERE theatrename like '{theatrename}' AND vid={vid} ORDER BY price, seatnumber".format(theatrename=theatrename, vid=vid))
+    available_seats = []
+    for result in cursor:
+      row = [result["seatnumber"], result["price"]]
+      available_seats.append(row)
+    cursor.close()
+    context = dict(data = available_seats, details = booking_details)
+    return render_template("booking.html", **context)
+
+  if request.method == 'POST':
+    result = request.form
+    seatnumber = request.form.get("SeatNumber","")
+    booking_details.append(seatnumber)
+    context = dict(details = booking_details)
+    return render_template("booking_complete.html",**context)
+  
 
 if __name__ == "__main__":
   import click
