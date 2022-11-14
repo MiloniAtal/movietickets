@@ -27,7 +27,8 @@
         {% for show in data %}
         <div class="row">
         <div class="col-sm">{{show[0].strftime('%m/%d/%Y')}}  </div>
-        <div class="col-sm">{{show[1]}} </div>
+        {% set venue_url = '/venue_search/' ~ show[4][1] %}
+        <div class="col-sm"><a href={{venue_url}}>{{show[1]}}</a></div>
         <div class="col-sm">{{show[3]}}</div>
         {% set my_url = '/booking/' ~ show[4][0] ~ '/' ~ show[4][1] ~ '/' ~ show[4][2] ~ '/' ~ show[4][3] %}
         {% set my_url_encoded = my_url | urlencode %}
