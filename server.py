@@ -13,10 +13,12 @@ import os
   # accessible as a variable in index.html:
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
-from flask import Flask, request, render_template, g, redirect, Response
+import flask
+from flask import Flask, request, render_template, g, redirect, Response, session
 
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
+app.secret_key = 'BAD_SECRET_KEY'
 
 
 #
@@ -31,7 +33,6 @@ app = Flask(__name__, template_folder=tmpl_dir)
 #     DATABASEURI = "postgresql://gravano:foobar@34.75.94.195/proj1part2"
 #
 DATABASEURI = "postgresql://vw2283:6795@34.75.94.195/proj1part2"
-
 
 #
 # This line creates a database engine that knows how to connect to the URI above.
@@ -169,7 +170,53 @@ def home():
   context = dict(movies=data, venues=data2 )
   return render_template("home.html", **context)
 
+@app.route('/login', methods=['GET'])
+def login():
+  return render_template("login.html")
 
+
+@app.route('/login', methods=['POST'])
+def login_post():
+  email = request.form.get('email')
+  password = request.form.get('password')
+  query_string = "SELECT name, uid FROM users where email = %s"
+
+  cursor = g.conn.execute(query_string, (email,))
+  names = []
+  ids = []
+  for result in cursor:
+    names.append(result['name'])
+    ids.append(result['uid'])
+
+  if(len(names) == 0):
+    return render_template("login.html")
+
+  if(len(names) == 1):
+    session['id'] = ids[0]
+    session['name'] = names[0]
+
+  return render_template("home.html")
+  
+  
+
+# @app.route('/login', methods=['POST'])
+# def login_post():
+#     email = request.form.get('email')
+#     password = request.form.get('password')
+#     remember = True if request.form.get('remember') else False
+
+#     user = db.query(User).filter_by(email=email).first()
+
+#     # check if user actually exists
+#     # take the user supplied password, hash it, and compare it to the hashed password in database
+#     if not user or not check_password_hash(user.password, password):
+#         flash('Please check your login credentials and try again.')
+#         return redirect(url_for('auth.login'))  # if user doesn't exist or password is wrong, reload the page
+
+#     # if the above check passes, then we know the user has the right credentials
+#     login_user(user, remember=remember)
+#     flash('You have been logged in.')
+#     return redirect(url_for('main.profile'))
 
 #
 # This is an example of a different path.  You can see it at:
@@ -192,10 +239,10 @@ def add():
   return redirect('/')
 
 
-@app.route('/login')
-def login():
-    abort(401)
-    this_is_never_executed()
+# @app.route('/login')
+# def login():
+#     abort(401)
+#     this_is_never_executed()
 
 @app.route('/venue_search')
 def venues_search():
