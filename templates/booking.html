@@ -10,7 +10,7 @@
 </style>
 
 <body>
-  
+  {% include 'head.html' %}
   <div class="container">
     <h1>Movie: {{details[0]}}</h1>
     <h2>Venue: {{details[1]}}, Hall {{details[2]}}</h2>
@@ -21,6 +21,7 @@
         <div class="text-centre">No seats available</div>
     {% else%}
         {% set cur_url = url_for(request.endpoint, **request.view_args)%}
+        {% if session['id']%}
         <form action={{cur_url}} method="post">
           <div class="form-row align-items-center">
             <label class="mr-sm-2" for="inlineFormCustomSelect">Preference</label>
@@ -35,6 +36,11 @@
             <button type="submit" class="btn btn-primary">Submit</button>
           </div>
         </form>
+        {% else%}
+          <div class="align-items-center">
+            <a href="/login">Please login to choose seats</a>
+          </div>
+        {% endif %}
     {% endif %}
   </div>
 
