@@ -12,10 +12,15 @@
 
 <body>
   <div class="container">
-    <h2 class="text-center">All venues running the movie: {{details[0]}}</h2>
+    <h2 class="text-center">{{details[0]}}</h2>
+    <hr>
     <h6 class="text-center">Description: {{details[1]}}</h6>
-    
+    {% set movie_info_url = '/movie_info/' ~ details[2] %}
+    <h6 class="text-center"><a href={{movie_info_url}}>More information</a></h6>
+
+    <hr>
     {% if data|length == 0 %}
+        
         <div class="text-centre">No venues to show</div>
     {% else%}
         <div class="row">
@@ -24,16 +29,18 @@
         <div class="col-sm">Hall</div>
         <div class="col-sm">Time</div>
         </div>
+        <hr>
         {% for show in data %}
-        <div class="row">
-        <div class="col-sm">{{show[0].strftime('%m/%d/%Y')}}  </div>
-        {% set venue_url = '/venue_search/' ~ show[4][1] %}
-        <div class="col-sm"><a href={{venue_url}}>{{show[1]}}</a></div>
-        <div class="col-sm">{{show[3]}}</div>
-        {% set my_url = '/booking/' ~ show[4][0] ~ '/' ~ show[4][1] ~ '/' ~ show[4][2] ~ '/' ~ show[4][3] %}
-        {% set my_url_encoded = my_url | urlencode %}
-        <div class="col-sm"><a href={{my_url_encoded}}>{{show[2].strftime('%H:%M')}}</a></div>
-        </div>
+          <div class="row">
+          <div class="col-sm">{{show[0].strftime('%m/%d/%Y')}}  </div>
+          {% set venue_url = '/venue_search/' ~ show[4][1] %}
+          <div class="col-sm"><a href={{venue_url}}>{{show[1]}}</a></div>
+          <div class="col-sm">{{show[3]}}</div>
+          {% set my_url = '/booking/' ~ show[4][0] ~ '/' ~ show[4][1] ~ '/' ~ show[4][2] ~ '/' ~ show[4][3] %}
+          {% set my_url_encoded = my_url | urlencode %}
+          <div class="col-sm"><a href={{my_url_encoded}}>{{show[2].strftime('%H:%M')}}</a></div>
+          </div>
+          <hr>
         {% endfor %}
 
     {% endif %}

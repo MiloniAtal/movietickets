@@ -15,6 +15,7 @@ from sqlalchemy import *
 from sqlalchemy.pool import NullPool
 import flask
 from flask import Flask, request, render_template, g, redirect, Response, session
+from datetime import date
 
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
@@ -185,6 +186,10 @@ def home_post():
     redirect_url = "movie_info/"+mid
     return redirect(redirect_url)
 
+  if(len(mid) > 0 and len(vid) > 0):
+    redirect_url = "venue_search/"+vid+"/"+mid
+    return redirect(redirect_url)
+
 
 
 @app.route('/login')
@@ -217,7 +222,10 @@ def login_post():
     session['id'] = ids[0]
     session['name'] = names[0]
 
-  return redirect("/home")
+  if("url" in session.keys()):
+    return redirect(session['url'])
+  else:
+    return redirect("/home")
 
   
 @app.route('/movie_info/<mid>')
@@ -288,7 +296,25 @@ def venue_search(vid):
   context = dict(data = venue_shows, details = venue_details)
   return render_template("venue_search.html", **context)
 
-  # return render_template("another.html")
+@app.route('/venue_search/<vid>/<mid>')
+def venue_movie_search(vid, mid):
+  cursor = g.conn.execute("SELECT T.date, M.name, T.starttime, theatrename, mid, vid, sid FROM Movie M NATURAL JOIN Shows S NATURAL JOIN Timing T WHERE vid={vid} AND mid={mid} ORDER BY T.date, M.name, theatrename, T.starttime ASC".format(vid=vid, mid=mid))
+  venue_shows = []
+  for result in cursor:
+    link = [result["mid"], result["vid"], result["theatrename"], result["sid"]]
+    row = [result["date"], result["name"], result["starttime"], result["theatrename"], link]
+    venue_shows.append(row)
+  print(venue_shows)
+  cursor.close()
+  
+  cursor2 = g.conn.execute("SELECT location, name FROM Venue WHERE vid={vid}".format(vid=vid))
+  venue_details = []
+  for result in cursor2:
+    venue_details.append(result["location"])
+    venue_details.append(result["name"])
+  cursor2.close()
+  context = dict(data = venue_shows, details = venue_details)
+  return render_template("venue_search.html", **context)
 
 @app.route('/movie_search/<mid>')
 def movie_search(mid):
@@ -306,42 +332,57 @@ def movie_search(mid):
   for result in cursor2:
     movie_details.append(result["name"])
     movie_details.append(result["description"])
+    movie_details.append(mid)
   cursor2.close()
   context = dict(data = movie_shows, details = movie_details)
   return render_template("movie_search.html", **context)
 
 @app.route('/booking/<mid>/<vid>/<theatrename>/<sid>', methods=["GET", "POST"])
 def booking(mid, vid, theatrename, sid):
-  booking_details = []
-  cursor = g.conn.execute("SELECT name FROM Movie WHERE mid={mid}".format(mid=mid))
-  for result in cursor:
-    booking_details.append(result["name"])
-  cursor = g.conn.execute("SELECT name FROM Venue WHERE vid={vid}".format(vid=vid))
-  for result in cursor:
-    booking_details.append(result["name"])
-  booking_details.append(theatrename)
-  cursor = g.conn.execute("SELECT date, starttime, endtime FROM Timing WHERE sid={sid}".format(sid=sid))
-  for result in cursor:
-    booking_details.append(result["date"])
-    booking_details.append(result["starttime"])
-    booking_details.append(result["endtime"])
-  cursor.close()
-  if request.method == 'GET':
-    cursor = g.conn.execute("SELECT seatnumber, price FROM SEAT  WHERE theatrename like '{theatrename}' AND vid={vid} EXCEPT SELECT seatnumber, price FROM SEAT NATURAL JOIN Ticket WHERE theatrename like '{theatrename}' AND vid={vid} ORDER BY price, seatnumber".format(theatrename=theatrename, vid=vid))
-    available_seats = []
+  if 'id' in session.keys():
+    booking_details = []
+    cursor = g.conn.execute("SELECT name FROM Movie WHERE mid={mid}".format(mid=mid))
     for result in cursor:
-      row = [result["seatnumber"], result["price"]]
-      available_seats.append(row)
+      booking_details.append(result["name"])
+    cursor = g.conn.execute("SELECT name FROM Venue WHERE vid={vid}".format(vid=vid))
+    for result in cursor:
+      booking_details.append(result["name"])
+    booking_details.append(theatrename)
+    cursor = g.conn.execute("SELECT date, starttime, endtime FROM Timing WHERE sid={sid}".format(sid=sid))
+    for result in cursor:
+      booking_details.append(result["date"])
+      booking_details.append(result["starttime"])
+      booking_details.append(result["endtime"])
     cursor.close()
-    context = dict(data = available_seats, details = booking_details)
-    return render_template("booking.html", **context),{"Refresh": "30; url=/home"}
+    if request.method == 'GET':
+      cursor = g.conn.execute("SELECT seatnumber, price FROM SEAT  WHERE theatrename like '{theatrename}' AND vid={vid} EXCEPT SELECT seatnumber, price FROM SEAT NATURAL JOIN Ticket WHERE theatrename like '{theatrename}' AND vid={vid} ORDER BY price, seatnumber".format(theatrename=theatrename, vid=vid))
+      available_seats = []
+      for result in cursor:
+        row = [result["seatnumber"], result["price"]]
+        available_seats.append(row)
+      cursor.close()
+      context = dict(data = available_seats, details = booking_details)
+      return render_template("booking.html", **context),{"Refresh": "30; url=/home"}
+    if request.method == 'POST':
+      result = request.form
+      seatnumber = request.form.get("SeatNumber","")
+      cursor = g.conn.execute("SELECT MAX(tid) FROM Ticket")
+      for result in cursor:
+        tid = result["max"] + 1
+      cursor.close()
+      print("TID")
+      print(tid)
+      uid = session['id']
+      g.conn.execute("INSERT INTO Ticket (tid, time, seatnumber, theatrename, vid, sid, mid, uid) VALUES ({tid}, '{time}', {seatnumber}, '{theatrename}', {vid}, {sid}, {mid}, {uid})".format(tid=tid, time=date.today(), seatnumber=seatnumber, theatrename=theatrename, vid=vid, sid=sid, mid=mid, uid=uid))
+      booking_details.append(seatnumber)
+      context = dict(details = booking_details)
+      return render_template("booking_complete.html",**context)
+  
+  else:
+    session['url'] = request.url
+    return redirect("/login")
 
-  if request.method == 'POST':
-    result = request.form
-    seatnumber = request.form.get("SeatNumber","")
-    booking_details.append(seatnumber)
-    context = dict(details = booking_details)
-    return render_template("booking_complete.html",**context)
+  
   
 
 if __name__ == "__main__":
