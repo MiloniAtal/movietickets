@@ -34,6 +34,7 @@ app.secret_key = 'BAD_SECRET_KEY'
 #
 DATABASEURI = "postgresql://vw2283:6795@34.75.94.195/proj1part2"
 
+
 #
 # This line creates a database engine that knows how to connect to the URI above.
 #
@@ -155,32 +156,45 @@ def index():
 
 @app.route('/home')
 def home():
-  cursor = g.conn.execute("SELECT name,stars FROM movie")
+  cursor = g.conn.execute("SELECT name,stars,mid FROM movie")
   data = []
   for result in cursor:
-    data.append({'name':result['name'], 'stars':result['stars']})  # can also be accessed using result[0]
+    data.append({'name':result['name'], 'stars':result['stars'], 'mid':result['mid']})  # can also be accessed using result[0]
   cursor.close()
 
-  cursor = g.conn.execute("SELECT name,location FROM venue")
+  cursor = g.conn.execute("SELECT name,location,vid FROM venue")
   data2 = []
   for result in cursor:
-    data2.append({'name':result['name'], 'location':result['location']})  # can also be accessed using result[0]
+    data2.append({'name':result['name'], 'location':result['location'], 'vid':result['vid']})  # can also be accessed using result[0]
   cursor.close()
 
   context = dict(movies=data, venues=data2 )
   return render_template("home.html", **context)
 
-@app.route('/login', methods=['GET'])
+@app.route('/home', methods=['POST'])
+def home_post():
+  print("request form", request.form)
+  mid = request.form.get("Movie", "")
+  vid = request.form.get("Veneu", "")
+  print(mid, vid)
+  if(len(mid) == 0 and len(vid) > 0):
+    redirect_url = "venue_search/"+vid
+    return redirect(redirect_url)
+
+  if(len(mid) > 0 and len(vid) == 0):
+    redirect_url = "movie_info/"+mid
+    return redirect(redirect_url)
+
+@app.route('/login')
 def login():
   return render_template("login.html")
-
 
 @app.route('/login', methods=['POST'])
 def login_post():
   email = request.form.get('email')
   password = request.form.get('password')
   query_string = "SELECT name, uid FROM users where email = %s"
-
+ 
   cursor = g.conn.execute(query_string, (email,))
   names = []
   ids = []
@@ -196,27 +210,26 @@ def login_post():
     session['name'] = names[0]
 
   return render_template("home.html")
+
   
-  
+@app.route('/movie_info/<mid>')
+def movieInfo(mid):
 
-# @app.route('/login', methods=['POST'])
-# def login_post():
-#     email = request.form.get('email')
-#     password = request.form.get('password')
-#     remember = True if request.form.get('remember') else False
+  cursor = g.conn.execute("SELECT * from Movie M where M.mid = {mid}".format(mid=mid)) 
+  data = []
+  reviews = []
+  for result in cursor:
+    data.append(result)
+  cursor.close()
 
-#     user = db.query(User).filter_by(email=email).first()
+  cursor = g.conn.execute("SELECT r.text, r.time, u.name from Reviews r NATURAL JOIN Users u WHERE r.mid={mid}".format(mid=mid))
+  for result in cursor:
+    reviews.append({'uname':result['name'], 'text':result['text'], 'time':result['time']})
+  cursor.close
+  context = dict(movie = data[0], reviews=reviews)
 
-#     # check if user actually exists
-#     # take the user supplied password, hash it, and compare it to the hashed password in database
-#     if not user or not check_password_hash(user.password, password):
-#         flash('Please check your login credentials and try again.')
-#         return redirect(url_for('auth.login'))  # if user doesn't exist or password is wrong, reload the page
+  return render_template("movie_info.html", **context)
 
-#     # if the above check passes, then we know the user has the right credentials
-#     login_user(user, remember=remember)
-#     flash('You have been logged in.')
-#     return redirect(url_for('main.profile'))
 
 #
 # This is an example of a different path.  You can see it at:
@@ -239,14 +252,9 @@ def add():
   return redirect('/')
 
 
-# @app.route('/login')
-# def login():
-#     abort(401)
-#     this_is_never_executed()
-
 @app.route('/venue_search')
 def venues_search():
-  cursor = g.conn.execute("SELECT DISTINCT V.name, V.vid FROM Venue V NATURAL JOIN Shows S")
+  cursor = g.conn.execute("SELECT DISTINCT V.name, V.vid FROM Venue V NATURAL JOIN Shows S") 
   venue_names = []
   for result in cursor:
     row = [result["name"], result["vid"]]

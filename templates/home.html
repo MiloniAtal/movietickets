@@ -22,10 +22,30 @@
   
   <div class="container">
 
-      <div class="form-outline">
-          Search By Movie: <input type="search" id="form1" class="form-control" placeholder="Type Movie" aria-label="Search" />
-          Search by Theatres: <input type="search" id="form1" class="form-control" placeholder="Type Theatre" aria-label="Search" />
+    <form action="/home" method="post">
+      <div class="form-row align-items-center">
+        <label class="mr-sm-2" for="inlineFormCustomSelect">Select the Movie and/or Theatre</label>
+        <select class="custom-select mr-sm-2" id="Movie" name="Movie">
+          <option selected>Choose Movie</option>
+          {% for movie in movies %}
+          <option value="{{movie.mid}}" id="{{movie.mid}}">{{movie.name}}</option>
+          {% endfor %}
+        </select>
+        
+        <hr>
+        
+        <select class="custom-select mr-sm-2" id="Venue" name="Venue">
+          <option selected>Choose Venue</option>
+          {% for venue in venues %}
+          <option value="{{venue.vid}}" id="{{venue.name}}">{{venue.name}}</option>
+          {% endfor %}
+        </select>
+
       </div>
+      <div class="form-row align-items-center">
+        <button type="submit" class="btn btn-primary">Search</button>
+      </div>
+    </form>
 
   </div>
   
