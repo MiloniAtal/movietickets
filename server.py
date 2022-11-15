@@ -175,19 +175,22 @@ def home():
 def home_post():
   print("request form", request.form)
   mid = request.form.get("Movie", "")
-  vid = request.form.get("Veneu", "")
+  vid = request.form.get("Venue", "")
   print(mid, vid)
-  if(len(mid) == 0 and len(vid) > 0):
+  if(mid == "Choose Movie" and len(vid) > 0):
     redirect_url = "venue_search/"+vid
     return redirect(redirect_url)
 
-  if(len(mid) > 0 and len(vid) == 0):
+  if(len(mid) > 0 and vid == "Choose Venue"):
     redirect_url = "movie_info/"+mid
     return redirect(redirect_url)
+
+
 
 @app.route('/login')
 def login():
   return render_template("login.html")
+
 
 @app.route('/login', methods=['POST'])
 def login_post():
