@@ -191,6 +191,11 @@ def home_post():
 def login():
   return render_template("login.html")
 
+@app.route('/logout')
+def logout():
+  session.clear()
+  return redirect("/home")
+  
 
 @app.route('/login', methods=['POST'])
 def login_post():
@@ -212,7 +217,7 @@ def login_post():
     session['id'] = ids[0]
     session['name'] = names[0]
 
-  return render_template("home.html")
+  return redirect("/home")
 
   
 @app.route('/movie_info/<mid>')
@@ -225,26 +230,22 @@ def movieInfo(mid):
     data.append(result)
   cursor.close()
 
-  cursor = g.conn.execute("SELECT r.text, r.time, u.name from Reviews r NATURAL JOIN Users u WHERE r.mid={mid}".format(mid=mid))
+  cursor = g.conn.execute("SELECT r.rid, r.text, r.time, u.name from Reviews r NATURAL JOIN Users u WHERE r.mid={mid}".format(mid=mid))
   for result in cursor:
-    reviews.append({'uname':result['name'], 'text':result['text'], 'time':result['time']})
+    cursor2 = g.conn.execute("SELECT COUNT(*) from Likes l where l.rid = {rid}".format(rid=result['rid']))
+    numLikes = 0
+    for cnt in cursor2:
+      numLikes = cnt['count']
+    reviews.append({'uname':result['name'], 'text':result['text'], 'time':result['time'], 'numLikes':numLikes})
   cursor.close
+
+  
+  
+  
   context = dict(movie = data[0], reviews=reviews)
 
   return render_template("movie_info.html", **context)
 
-
-#
-# This is an example of a different path.  You can see it at:
-#
-#     localhost:8111/another
-#
-# Notice that the function name is another() rather than index()
-# The functions for each app.route need to have different names
-#
-@app.route('/another')
-def another():
-  return render_template("another.html")
 
 
 # Example of adding new data to the database
@@ -333,7 +334,7 @@ def booking(mid, vid, theatrename, sid):
       available_seats.append(row)
     cursor.close()
     context = dict(data = available_seats, details = booking_details)
-    return render_template("booking.html", **context)
+    return render_template("booking.html", **context),{"Refresh": "30; url=/home"}
 
   if request.method == 'POST':
     result = request.form

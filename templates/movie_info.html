@@ -18,9 +18,11 @@
     <div class="container">
         <div class="row">
             <div class="col-md">
-    <iframe width="600" height="500"
-    src={{movie.trailer}}>
-    </iframe>
+    <!-- <iframe width="600" height="500"
+    src="https://www.youtube.com/watch?v=NmzuHjWmXOc">
+    </iframe> -->
+
+    <iframe width="700" height="400" src="https://www.youtube.com/embed/NmzuHjWmXOc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         </div>
         <div class="col-md">
             <div class = "h-25 row text-center align-middle">
@@ -31,7 +33,7 @@
             
             <hr>
             
-            <div class = "h-25 row text-center align-middle">
+            <div class = "h-20 row text-center align-middle">
             Cast : <b>{{movie.stars}}</b>
             </div>
             
@@ -39,6 +41,12 @@
 
             <div class = "h-25 row text-center align-middle"> 
             Summary: {{movie.description}}
+            </div>
+
+            <hr>
+
+            <div class = "row text-center align-middle"> 
+                <button class = "btn-info" type="button" onclick="window.location.href='/movie_search/{{movie.mid}}'">Book Tickets</button>
             </div>
         </div>
         
@@ -61,7 +69,8 @@
                 </div>
                 <div class = "row">
                     Written By: {{review.uname}} |
-                    &nbsp;<i> {{review.time}} </i>
+                    &nbsp;<i> {{review.time}}&nbsp; </i> |
+                    &nbsp;<i> Liked by {{review.numLikes}} users</i>
                 </div>
             </div>
             

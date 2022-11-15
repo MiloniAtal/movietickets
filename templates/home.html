@@ -14,6 +14,9 @@
   <div class = "header">
     {% if session['id'] %}
       <li>Welcome back {{ session['name'] }}</li>
+      <button type="button" onclick="window.location.href='/logout'">Logout</button>
+    {% else %}
+      <button type="button" onclick="window.location.href='/login'">Login</button>
     {% endif %}
   </div>
 
