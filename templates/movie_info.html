@@ -4,14 +4,7 @@
 
 
 <body> 
-
-  <div class = "header">
-    <div class = "text-centre">
-    {% if session['id'] %}
-      <li>Welcome back {{ session['name'] }}</li>
-    {% endif %}
-    </div>
-  </div>
+  {% include 'head.html' %}
 
 <hr>
   

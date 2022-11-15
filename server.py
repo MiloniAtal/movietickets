@@ -80,83 +80,9 @@ def teardown_request(exception):
     pass
 
 
-#
-# @app.route is a decorator around index() that means:
-#   run index() whenever the user tries to access the "/" path using a GET request
-#
-# If you wanted the user to go to, for example, localhost:8111/foobar/ with POST or GET then you could use:
-#
-#       @app.route("/foobar/", methods=["POST", "GET"])
-#
-# PROTIP: (the trailing / in the path is important)
-#
-# see for routing: https://flask.palletsprojects.com/en/2.0.x/quickstart/?highlight=routing
-# see for decorators: http://simeonfranklin.com/blog/2012/jul/1/python-decorators-in-12-steps/
-#
-@app.route('/')
-def index():
-  """
-  request is a special object that Flask provides to access web request information:
-
-  request.method:   "GET" or "POST"
-  request.form:     if the browser submitted a form, this contains the data in the form
-  request.args:     dictionary of URL arguments, e.g., {a:1, b:2} for http://localhost?a=1&b=2
-
-  See its API: https://flask.palletsprojects.com/en/2.0.x/api/?highlight=incoming%20request%20data
-
-  """
-
-  # DEBUG: this is debugging code to see what request looks like
-  print(request.args)
-
-
-  #
-  # example of a database query
-  #
-  cursor = g.conn.execute("SELECT name FROM users")
-  names = []
-  for result in cursor:
-    names.append(result['name'])  # can also be accessed using result[0]
-  cursor.close()
-
-  #
-  # Flask uses Jinja templates, which is an extension to HTML where you can
-  # pass data to a template and dynamically generate HTML based on the data
-  # (you can think of it as simple PHP)
-  # documentation: https://realpython.com/primer-on-jinja-templating/
-  #
-  # You can see an example template in templates/index.html
-  #
-  # context are the variables that are passed to the template.
-  # for example, "data" key in the context variable defined below will be
-  # accessible as a variable in index.html:
-  #
-  #     # will print: [u'grace hopper', u'alan turing', u'ada lovelace']
-  #     <div>{{data}}</div>
-  #
-  #     # creates a <div> tag for each element in data
-  #     # will print:
-  #     #
-  #     #   <div>grace hopper</div>
-  #     #   <div>alan turing</div>
-  #     #   <div>ada lovelace</div>
-  #     #
-  #     {% for n in data %}
-  #     <div>{{n}}</div>
-  #     {% endfor %}
-  #
-  context = dict(data = names)
-
-
-  #
-  # render_template looks in the templates/ folder for files.
-  # for example, the below file reads template/index.html
-  #
-  return render_template("index.html", **context)
-
-
 @app.route('/home')
 def home():
+  session['url'] = request.url
   cursor = g.conn.execute("SELECT name,stars,mid FROM movie")
   data = []
   for result in cursor:
@@ -174,6 +100,7 @@ def home():
 
 @app.route('/home', methods=['POST'])
 def home_post():
+  session['url'] = request.url
   print("request form", request.form)
   mid = request.form.get("Movie", "")
   vid = request.form.get("Venue", "")
@@ -198,8 +125,13 @@ def login():
 
 @app.route('/logout')
 def logout():
+  if("url" in session.keys()):
+    url = session['url']
+  else:
+    url = "/home"
   session.clear()
-  return redirect("/home")
+  return redirect(url)
+
   
 
 @app.route('/login', methods=['POST'])
@@ -230,7 +162,7 @@ def login_post():
   
 @app.route('/movie_info/<mid>')
 def movieInfo(mid):
-
+  session['url'] = request.url
   cursor = g.conn.execute("SELECT * from Movie M where M.mid = {mid}".format(mid=mid)) 
   data = []
   reviews = []
@@ -246,38 +178,13 @@ def movieInfo(mid):
       numLikes = cnt['count']
     reviews.append({'uname':result['name'], 'text':result['text'], 'time':result['time'], 'numLikes':numLikes})
   cursor.close
-
-  
-  
-  
   context = dict(movie = data[0], reviews=reviews)
 
   return render_template("movie_info.html", **context)
 
-
-
-# Example of adding new data to the database
-@app.route('/add', methods=['POST'])
-def add():
-  name = request.form['name']
-  g.conn.execute('INSERT INTO test(name) VALUES (%s)', name)
-  return redirect('/')
-
-
-@app.route('/venue_search')
-def venues_search():
-  cursor = g.conn.execute("SELECT DISTINCT V.name, V.vid FROM Venue V NATURAL JOIN Shows S") 
-  venue_names = []
-  for result in cursor:
-    row = [result["name"], result["vid"]]
-    venue_names.append(row)
-  print(venue_names)
-  cursor.close()
-  context = dict(data = venue_names)
-  return render_template("venues_search.html", **context)
-
 @app.route('/venue_search/<vid>')
 def venue_search(vid):
+  session['url'] = request.url
   cursor = g.conn.execute("SELECT T.date, M.name, T.starttime, theatrename, mid, vid, sid FROM Movie M NATURAL JOIN Shows S NATURAL JOIN Timing T WHERE vid={vid} ORDER BY T.date, M.name, theatrename, T.starttime ASC".format(vid=vid))
   venue_shows = []
   for result in cursor:
@@ -298,6 +205,7 @@ def venue_search(vid):
 
 @app.route('/venue_search/<vid>/<mid>')
 def venue_movie_search(vid, mid):
+  session['url'] = request.url
   cursor = g.conn.execute("SELECT T.date, M.name, T.starttime, theatrename, mid, vid, sid FROM Movie M NATURAL JOIN Shows S NATURAL JOIN Timing T WHERE vid={vid} AND mid={mid} ORDER BY T.date, M.name, theatrename, T.starttime ASC".format(vid=vid, mid=mid))
   venue_shows = []
   for result in cursor:
@@ -318,6 +226,7 @@ def venue_movie_search(vid, mid):
 
 @app.route('/movie_search/<mid>')
 def movie_search(mid):
+  session['url'] = request.url
   cursor = g.conn.execute("SELECT T.date, V.name, theatrename, T.starttime, mid, vid, sid FROM Shows S NATURAL JOIN Timing T NATURAL JOIN Venue V WHERE mid ={mid} ORDER BY T.date, V.name, theatrename, T.starttime".format(mid=mid))
   movie_shows = []
   for result in cursor:
@@ -339,48 +248,45 @@ def movie_search(mid):
 
 @app.route('/booking/<mid>/<vid>/<theatrename>/<sid>', methods=["GET", "POST"])
 def booking(mid, vid, theatrename, sid):
-  if 'id' in session.keys():
-    booking_details = []
-    cursor = g.conn.execute("SELECT name FROM Movie WHERE mid={mid}".format(mid=mid))
+  session['url'] = request.url
+  booking_details = []
+  cursor = g.conn.execute("SELECT name FROM Movie WHERE mid={mid}".format(mid=mid))
+  for result in cursor:
+    booking_details.append(result["name"])
+  cursor = g.conn.execute("SELECT name FROM Venue WHERE vid={vid}".format(vid=vid))
+  for result in cursor:
+    booking_details.append(result["name"])
+  booking_details.append(theatrename)
+  cursor = g.conn.execute("SELECT date, starttime, endtime FROM Timing WHERE sid={sid}".format(sid=sid))
+  for result in cursor:
+    booking_details.append(result["date"])
+    booking_details.append(result["starttime"])
+    booking_details.append(result["endtime"])
+  cursor.close()
+  if request.method == 'GET':
+    cursor = g.conn.execute("SELECT seatnumber, price FROM SEAT  WHERE theatrename like '{theatrename}' AND vid={vid} EXCEPT SELECT seatnumber, price FROM SEAT NATURAL JOIN Ticket WHERE theatrename like '{theatrename}' AND vid={vid} ORDER BY price, seatnumber".format(theatrename=theatrename, vid=vid))
+    available_seats = []
     for result in cursor:
-      booking_details.append(result["name"])
-    cursor = g.conn.execute("SELECT name FROM Venue WHERE vid={vid}".format(vid=vid))
-    for result in cursor:
-      booking_details.append(result["name"])
-    booking_details.append(theatrename)
-    cursor = g.conn.execute("SELECT date, starttime, endtime FROM Timing WHERE sid={sid}".format(sid=sid))
-    for result in cursor:
-      booking_details.append(result["date"])
-      booking_details.append(result["starttime"])
-      booking_details.append(result["endtime"])
+      row = [result["seatnumber"], result["price"]]
+      available_seats.append(row)
     cursor.close()
-    if request.method == 'GET':
-      cursor = g.conn.execute("SELECT seatnumber, price FROM SEAT  WHERE theatrename like '{theatrename}' AND vid={vid} EXCEPT SELECT seatnumber, price FROM SEAT NATURAL JOIN Ticket WHERE theatrename like '{theatrename}' AND vid={vid} ORDER BY price, seatnumber".format(theatrename=theatrename, vid=vid))
-      available_seats = []
-      for result in cursor:
-        row = [result["seatnumber"], result["price"]]
-        available_seats.append(row)
-      cursor.close()
-      context = dict(data = available_seats, details = booking_details)
-      return render_template("booking.html", **context),{"Refresh": "30; url=/home"}
-    if request.method == 'POST':
-      result = request.form
-      seatnumber = request.form.get("SeatNumber","")
-      cursor = g.conn.execute("SELECT MAX(tid) FROM Ticket")
-      for result in cursor:
-        tid = result["max"] + 1
-      cursor.close()
-      print("TID")
-      print(tid)
-      uid = session['id']
-      g.conn.execute("INSERT INTO Ticket (tid, time, seatnumber, theatrename, vid, sid, mid, uid) VALUES ({tid}, '{time}', {seatnumber}, '{theatrename}', {vid}, {sid}, {mid}, {uid})".format(tid=tid, time=date.today(), seatnumber=seatnumber, theatrename=theatrename, vid=vid, sid=sid, mid=mid, uid=uid))
-      booking_details.append(seatnumber)
-      context = dict(details = booking_details)
-      return render_template("booking_complete.html",**context)
+    context = dict(data = available_seats, details = booking_details)
+    return render_template("booking.html", **context),{"Refresh": "30; url=/home"}
+  if request.method == 'POST':
+    result = request.form
+    seatnumber = request.form.get("SeatNumber","")
+    cursor = g.conn.execute("SELECT MAX(tid) FROM Ticket")
+    for result in cursor:
+      tid = result["max"] + 1
+    cursor.close()
+    print("TID")
+    print(tid)
+    uid = session['id']
+    g.conn.execute("INSERT INTO Ticket (tid, time, seatnumber, theatrename, vid, sid, mid, uid) VALUES ({tid}, '{time}', {seatnumber}, '{theatrename}', {vid}, {sid}, {mid}, {uid})".format(tid=tid, time=date.today(), seatnumber=seatnumber, theatrename=theatrename, vid=vid, sid=sid, mid=mid, uid=uid))
+    booking_details.append(seatnumber)
+    context = dict(details = booking_details)
+    return render_template("booking_complete.html",**context)
   
-  else:
-    session['url'] = request.url
-    return redirect("/login")
 
   
   
