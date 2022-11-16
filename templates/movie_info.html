@@ -59,7 +59,7 @@
     
     <hr>
 
-    <div class = "container">
+    <div class = "container padding">
         <h3> Reviews </h3>
         <hr>
      <div class = "container">
@@ -73,13 +73,39 @@
                 <div class = "row">
                     Written By: {{review.uname}} |
                     &nbsp;<i> {{review.time}}&nbsp; </i> |
-                    &nbsp;<i> Liked by {{review.numLikes}} users</i>
+                    &nbsp;<i> Liked by {{review.numLikes}} users</i> | 
+                    &nbsp;
+                    {% if session['id'] %}
+                        <button class="btn-info" onclick="window.location.href='/like_review/{{review.rid}}/{{movie.mid}}'">Like</button>
+                    {% else %}
+                        <button class="btn-info" onclick="window.location.href='/login'">Login to like!</button>
+                    {% endif %}
                 </div>
             </div>
             
         </div>
         <hr>
         {% endfor %}
+
+        
+        <div class = "row">
+            <div class = "container">
+                {% if session['id'] %}
+                <form action="/write_review/{{movie.mid}}" method="POST">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <button class="input-group-text" id="review">Write a review:</button>           
+                    </div>
+                    <input name = "review" class="form-control" id="review" aria-label="With textarea"></input>
+                  </div>          
+                  </form>
+                  {% endif %}
+
+                {% if not session['id'] %}
+                    <button class="input-group-text" onclick="window.location.href='/login'">Login to write a review!</button>     
+                {% endif %}
+            </div>
+        </div>
      </div>          
     </div>
 

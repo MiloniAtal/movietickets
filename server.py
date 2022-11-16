@@ -16,6 +16,8 @@ from sqlalchemy.pool import NullPool
 import flask
 from flask import Flask, request, render_template, g, redirect, Response, session
 from datetime import date
+from datetime import date
+
 
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
@@ -204,6 +206,79 @@ def movieInfo(mid):
 
   cursor = g.conn.execute("SELECT genre FROM Movie where mid={mid}".format(mid=mid))
   genre_list = []
+
+  context = dict(movie = data[0], reviews=reviews)
+
+  return render_template("movie_info.html", **context)
+
+
+@app.route('/profile')
+def profile():
+  uid = session['id']
+  bookings = []
+  info = []
+  reviews = []
+  likedReviews = []
+
+  cursor = g.conn.execute("SELECT * from users WHERE uid={uid}".format(uid=uid))
+  for res in cursor:
+    info = {'name':res['name'], 'address':res['address'], 'dob':res['dob'], 'email':res['email']}
+  cursor.close()
+
+  cursor = g.conn.execute("SELECT r.text, m.name FROM reviews r, movie m, likes l WHERE l.uid={uid} AND l.rid=r.rid".format(uid=uid))
+  for res in cursor:
+    likedReviews.append({'text':res['text'], 'moviename':res['name']})
+  cursor.close()
+  
+  cursor = g.conn.execute("SELECT r.text, r.time, m.name FROM reviews r NATURAL JOIN movie m WHERE r.uid={uid}".format(uid=uid))
+  for res in cursor:
+    reviews.append({'text':res['text'], 'date':res['time'], 'moviename':res['name']})
+  cursor.close()
+
+  cursor = g.conn.execute("SELECT distinct m.name AS moviename, v.name as venuename, t.time from movie m, venue v, ticket t WHERE m.mid = t.mid AND v.vid = t.vid AND t.uid = {uid}".format(uid=uid))
+  for res in cursor:
+    bookings.append({'venue':res['venuename'], 'moviename':res['moviename'], 'time':res['time']})
+  cursor.close()
+
+  context = dict(bookings = bookings, likedReviews = likedReviews, info = info, reviews = reviews)
+  
+  return render_template("user_profile.html", **context)
+
+
+
+@app.route('/write_review/<mid>', methods=['POST'])
+def writeReview(mid): 
+  reviewText = request.form['review']
+  numReviews = 0
+  cursor = g.conn.execute("SELECT MAX(rid) from reviews")
+  for res in cursor:
+    numReviews = res['max']+1
+  cursor.close()
+
+  cursor = g.conn.execute("INSERT into reviews(rid,text,time,uid,mid) values ({rid}, '{text}', '{time}', {uid}, {mid})".format(rid=numReviews, text=reviewText, time=date.today().isoformat(), uid=session['id'], mid=mid))
+  cursor.close()
+  
+  return redirect("/movie_info/{mid}".format(mid=mid))
+  
+@app.route('/like_review/<rid>/<mid>', methods=['POST'])
+def likeReview(rid,mid):
+  cursor = g.conn.execute("INSERT into likes(rid,uid) values ({rid},{uid})".format(rid=rid,uid=session['id']))
+  cursor.close()
+  return redirect("movie_info/{mid}".format(mid=mid))
+
+
+# Example of adding new data to the database
+@app.route('/add', methods=['POST'])
+def add():
+  name = request.form['name']
+  g.conn.execute('INSERT INTO test(name) VALUES (%s)', name)
+  return redirect('/')
+
+
+@app.route('/venue_search')
+def venues_search():
+  cursor = g.conn.execute("SELECT DISTINCT V.name, V.vid FROM Venue V NATURAL JOIN Shows S") 
+  venue_names = []
   for result in cursor:
     if(result["genre"]):
       genres = result["genre"]
