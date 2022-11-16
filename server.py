@@ -206,8 +206,25 @@ def movieInfo(mid):
   cursor = g.conn.execute("SELECT genre FROM Movie where mid={mid}".format(mid=mid))
   genre_list = []
 
-  context = dict(movie = data[0], reviews=reviews)
+  for result in cursor:
+    if(result["genre"]):
+      genres = result["genre"]
+      genre_list = [word.strip() for word in genres.split(',')]
+  reco_mid = []
+  for genre in genre_list:
+    cursor = g.conn.execute("SELECT mid FROM Movie where genre like '%%{genre}%%'".format(genre=genre))
+    for result in cursor:
+      reco_mid.append(result["mid"])
+  reco_mid = list(set(reco_mid))
+  recos = []
+  for rmid in reco_mid:
+    if(int(rmid) != int(mid)):
+      cursor = g.conn.execute("SELECT name FROM Movie WHERE mid={mid}".format(mid=rmid))
+      for result in cursor:
+        recos.append([rmid, result["name"]])
+  cursor.close()
 
+  context = dict(movie = data[0], reviews=reviews, recos=recos)
   return render_template("movie_info.html", **context)
 
 
@@ -276,28 +293,24 @@ def add():
 
 @app.route('/venue_search')
 def venues_search():
-  cursor = g.conn.execute("SELECT DISTINCT V.name, V.vid FROM Venue V NATURAL JOIN Shows S") 
-  venue_names = []
+  session['url'] = request.url
+  cursor = g.conn.execute("SELECT T.date, M.name, T.starttime, theatrename, mid, vid, sid FROM Movie M NATURAL JOIN Shows S NATURAL JOIN Timing T WHERE vid={vid} ORDER BY T.date, M.name, theatrename, T.starttime ASC".format(vid=vid))
+  venue_shows = []
   for result in cursor:
-    if(result["genre"]):
-      genres = result["genre"]
-      genre_list = [word.strip() for word in genres.split(',')]
-  reco_mid = []
-  for genre in genre_list:
-    cursor = g.conn.execute("SELECT mid FROM Movie where genre like '%%{genre}%%'".format(genre=genre))
-    for result in cursor:
-      reco_mid.append(result["mid"])
-  reco_mid = list(set(reco_mid))
-  recos = []
-  for rmid in reco_mid:
-    if(int(rmid) != int(mid)):
-      cursor = g.conn.execute("SELECT name FROM Movie WHERE mid={mid}".format(mid=rmid))
-      for result in cursor:
-        recos.append([rmid, result["name"]])
+    link = [result["mid"], result["vid"], result["theatrename"], result["sid"]]
+    row = [result["date"], result["name"], result["starttime"], result["theatrename"], link]
+    venue_shows.append(row)
+  print(venue_shows)
   cursor.close()
-
-  context = dict(movie = data[0], reviews=reviews, recos=recos)
-  return render_template("movie_info.html", **context)
+  
+  cursor2 = g.conn.execute("SELECT location, name FROM Venue WHERE vid={vid}".format(vid=vid))
+  venue_details = []
+  for result in cursor2:
+    venue_details.append(result["location"])
+    venue_details.append(result["name"])
+  cursor2.close()
+  context = dict(data = venue_shows, details = venue_details)
+  return render_template("venue_search.html", **context)
 
 @app.route('/venue_search/<vid>')
 def venue_search(vid):
