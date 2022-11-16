@@ -39,15 +39,50 @@
 
       </div>
       <div class="form-row align-items-center">
-        <button type="submit" class="btn btn-primary">Search</button>
+        <button type="submit" class="btn btn-primary m-2">Search</button>
       </div>
     </form>
 
+    
+    
+
   </div>
-  
+  <hr>
+  <div class="container">
+    {% if famous_movie|length != 0 %}
+      
+      <h3>The two movies with the most tickets sold:</h3>
+        {% for fm in famous_movie %}
+        <div class="row">
+          <div class="col-sm">{{fm[1]}}</div>
+          {% set movie_info_url = '/movie_info/' ~ fm[0] %}
+          {% set movie_search_url = '/movie_search/' ~ fm[0] %}
+          <div class="col-sm"><a href={{movie_info_url}}>More information</a></div>
+          <div class="col-sm"><a href={{movie_search_url}}>Search shows</a></div>
+          <div class="col-sm">Ticket Sold: {{fm[2]}}</div>
+        </div>
+        {% endfor %}
+    {% endif%}
+  </div>
+  <hr>
+  <div class="container">
+    {% if famous_venue|length != 0 %}
+      
+      <h3>The two venues with the most tickets sold:</h3>
+        {% for fv in famous_venue %}
+        <div class="row">
+          <div class="col-sm">{{fv[1]}}</div>
+          <div class="col-sm">{{fv[3]}}</div>
+          {% set venue_search_url = '/venue_search/' ~ fv[0] %}
+          <div class="col-sm"><a href={{venue_search_url}}>Search shows</a></div>
+          <div class="col-sm">Ticket Sold: {{fv[2]}}</div>
+        </div>
+        {% endfor %}
+    {% endif%}
+  </div>
   <hr>
   
-  <div class="container">
+  <!-- <div class="container">
   
     {% for n in movies %}
     <div class="row">
@@ -62,16 +97,16 @@
  <hr>
  <hr>
 
- <div class="container">
+  <div class="container">
+    
+    {% for n in venues %}
+    <div class="row">
+      <div class = "col-sm">{{n.name}}</div>
+      <div class = "col-sm">{{n.location}}</div>
+    </div>
+    {% endfor %}
   
-  {% for n in venues %}
-  <div class="row">
-    <div class = "col-sm">{{n.name}}</div>
-    <div class = "col-sm">{{n.location}}</div>
-  </div>
-  {% endfor %}
- 
-</div>
+  </div> -->
 
 
 

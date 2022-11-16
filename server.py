@@ -95,7 +95,29 @@ def home():
     data2.append({'name':result['name'], 'location':result['location'], 'vid':result['vid']})  # can also be accessed using result[0]
   cursor.close()
 
-  context = dict(movies=data, venues=data2 )
+  cursor = g.conn.execute("SELECT mid, COUNT(*) AS count FROM Ticket GROUP BY mid ORDER BY count DESC LIMIT 2")
+  famous_movie = []
+  for result in cursor:
+    mid = result["mid"]
+    cursor2 = g.conn.execute("SELECT name FROM Movie WHERE mid={mid}".format(mid=mid))
+    for res in cursor2:
+      name = res["name"]
+    famous_movie.append([mid, name, result["count"]])
+  cursor2.close()
+  cursor.close()
+
+  cursor = g.conn.execute("SELECT vid, COUNT(*) AS count FROM Ticket GROUP BY vid ORDER BY count DESC LIMIT 2")
+  famous_venue = []
+  for result in cursor:
+    vid = result["vid"]
+    cursor2 = g.conn.execute("SELECT name, location FROM Venue WHERE vid={vid}".format(vid=vid))
+    for res in cursor2:
+      name = res["name"]
+      location = res["location"]
+    famous_venue.append([vid, name, result["count"], location])
+  cursor2.close()
+  cursor.close()
+  context = dict(movies=data, venues=data2, famous_movie=famous_movie, famous_venue=famous_venue)
   return render_template("home.html", **context)
 
 @app.route('/home', methods=['POST'])
@@ -178,8 +200,29 @@ def movieInfo(mid):
       numLikes = cnt['count']
     reviews.append({'uname':result['name'], 'text':result['text'], 'time':result['time'], 'numLikes':numLikes})
   cursor.close
-  context = dict(movie = data[0], reviews=reviews)
+  
 
+  cursor = g.conn.execute("SELECT genre FROM Movie where mid={mid}".format(mid=mid))
+  genre_list = []
+  for result in cursor:
+    if(result["genre"]):
+      genres = result["genre"]
+      genre_list = [word.strip() for word in genres.split(',')]
+  reco_mid = []
+  for genre in genre_list:
+    cursor = g.conn.execute("SELECT mid FROM Movie where genre like '%%{genre}%%'".format(genre=genre))
+    for result in cursor:
+      reco_mid.append(result["mid"])
+  reco_mid = list(set(reco_mid))
+  recos = []
+  for rmid in reco_mid:
+    if(int(rmid) != int(mid)):
+      cursor = g.conn.execute("SELECT name FROM Movie WHERE mid={mid}".format(mid=rmid))
+      for result in cursor:
+        recos.append([rmid, result["name"]])
+  cursor.close()
+
+  context = dict(movie = data[0], reviews=reviews, recos=recos)
   return render_template("movie_info.html", **context)
 
 @app.route('/venue_search/<vid>')
