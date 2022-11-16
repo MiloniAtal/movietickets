@@ -21,7 +21,7 @@
         <div class="text-centre">No seats available</div>
     {% else%}
         {% set cur_url = url_for(request.endpoint, **request.view_args)%}
-        {% if session['id']%}
+        
         <form action={{cur_url}} method="post">
           <div class="form-row align-items-center">
             <label class="mr-sm-2" for="inlineFormCustomSelect">Preference</label>
@@ -32,15 +32,18 @@
               {% endfor %}
             </select>
           </div>
+          {% if session['id']%}
           <div class="form-row align-items-center">
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="submit" class="btn btn-primary m-2">Submit</button>
           </div>
-        </form>
-        {% else%}
+          {% else%}
+
           <div class="align-items-center">
-            <a href="/login">Please login to choose seats</a>
+            <a href="/login" class="badge badge-primary m-2">Please login to book ticket</a>
           </div>
         {% endif %}
+        </form>
+        
     {% endif %}
   </div>
 
