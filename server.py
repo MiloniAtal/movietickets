@@ -203,7 +203,6 @@ def movieInfo(mid):
     reviews.append({'uname':result['name'], 'text':result['text'], 'time':result['time'], 'numLikes':numLikes})
   cursor.close
   
-
   cursor = g.conn.execute("SELECT genre FROM Movie where mid={mid}".format(mid=mid))
   genre_list = []
 

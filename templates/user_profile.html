@@ -7,28 +7,32 @@
       font-size: 10pt;
       font-family: arial;
         }
+
+    .card{
+        margin: 0 auto
+    }
   </style>
 
 
 <body>
+    {% include 'head.html' %}
 
-
-  <div class="container p-3">
-    <div class = "row">
-         <div class = "col-md">  
-                    <h3 class="text-center">My Profile</h2>
-                    
+  <div class="container-fluid">
+    <div class = "row justify-content-center m-4">
+         <div class = "col-md text-center">  
+                 <span class = "text-center">   
+                    <h3 class="text-center">My Profile</h2>  
                     <div class = "row">Name: {{info.name}}</div>
                     <div class = "row">Address: {{info.address}}</div>
                     <div class = "row">DOB: {{info.dob}}</div>
                     <div class = "row">Email: {{info.email}}</div>
-                    
+                </span> 
             </div>
 
             <div class = "col-md">  
                 <h3 class="text-center">Booking History</h2>              
                 {% for booking in bookings %}   
-                <div class="card p" style="width: 18rem;">
+                <div class="card p" style="width: 22rem;">
                     <div class="card-header">
                         {{booking.moviename}}
                     </div>
@@ -43,7 +47,7 @@
         <div class = "col-md">  
             <h3 class="text-center">Reviews</h2>             
                 {% for review in reviews %}   
-                <div class="card" style="width: 20rem;">
+                <div class="card" style="width: 22rem;">
                     <div class="card-header">
                         {{review.moviename}}
                     </div>
@@ -58,7 +62,7 @@
         <div class = "col-md">  
             <h3 class="text-center">Liked Reviews</h2>
             {% for review in likedReviews %}   
-                <div class="card" style="width: 18rem;">
+                <div class="card" style="width: 22rem;">
                     <div class="card-header">
                         {{review.moviename}}
                     </div>
