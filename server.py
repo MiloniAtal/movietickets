@@ -183,9 +183,9 @@ def login_post():
   else:
     return redirect("/home")
 
-  
 @app.route('/movie_info/<mid>')
 def movieInfo(mid):
+
   session['url'] = request.url
   cursor = g.conn.execute("SELECT * from Movie M where M.mid = {mid}".format(mid=mid)) 
   data = []
@@ -197,10 +197,18 @@ def movieInfo(mid):
   cursor = g.conn.execute("SELECT r.rid, r.text, r.time, u.name from Reviews r NATURAL JOIN Users u WHERE r.mid={mid}".format(mid=mid))
   for result in cursor:
     cursor2 = g.conn.execute("SELECT COUNT(*) from Likes l where l.rid = {rid}".format(rid=result['rid']))
+    liked = 0
+    
+    if('id' in session):
+      cursor3 = g.conn.execute("SELECT COUNT(*) from Likes l where l.rid={rid} and l.uid={uid}".format(rid=result['rid'],uid=session['id']))
+      for cnt in cursor3:
+        if(cnt['count'] == 1): 
+          liked = 1
+
     numLikes = 0
     for cnt in cursor2:
       numLikes = cnt['count']
-    reviews.append({'uname':result['name'], 'text':result['text'], 'time':result['time'], 'numLikes':numLikes})
+    reviews.append({'uname':result['name'], 'text':result['text'], 'time':result['time'], 'rid':result['rid'], 'numLikes':numLikes, 'liked':liked})
   cursor.close
   
   cursor = g.conn.execute("SELECT genre FROM Movie where mid={mid}".format(mid=mid))
@@ -276,11 +284,12 @@ def writeReview(mid):
   
   return redirect("/movie_info/{mid}".format(mid=mid))
   
-@app.route('/like_review/<rid>/<mid>', methods=['POST'])
+@app.route('/like_review/<rid>/<mid>')
 def likeReview(rid,mid):
+  print(rid,mid)
   cursor = g.conn.execute("INSERT into likes(rid,uid) values ({rid},{uid})".format(rid=rid,uid=session['id']))
   cursor.close()
-  return redirect("movie_info/{mid}".format(mid=mid))
+  return redirect("/movie_info/{mid}".format(mid=mid))
 
 
 # Example of adding new data to the database

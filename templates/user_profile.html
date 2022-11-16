@@ -32,7 +32,7 @@
             <div class = "col-md">  
                 <h3 class="text-center">Booking History</h2>              
                 {% for booking in bookings %}   
-                <div class="card p" style="width: 22rem;">
+                <div class="card p" style="width: 24rem;">
                     <div class="card-header">
                         {{booking.moviename}}
                     </div>
@@ -47,14 +47,15 @@
         <div class = "col-md">  
             <h3 class="text-center">Reviews</h2>             
                 {% for review in reviews %}   
-                <div class="card" style="width: 22rem;">
-                    <div class="card-header">
+                <div class="card" style="width: 25rem;">
+                    <div class="card-header m-2">
                         {{review.moviename}}
                     </div>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item" style="text-overflow: ellipsis; max-height: 25ch;overflow: scroll;">{{review.text}}</li>
                         <li class="list-group-item">{{review.date}}</li>
                     </ul>
+                    
                 </div>
                 {% endfor %}
         </div>
