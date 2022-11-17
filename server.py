@@ -87,16 +87,18 @@ def teardown_request(exception):
 def signup():
   if(request.method == 'POST'):
     name,email,dob,address,password = request.form.get("name", ""), request.form.get("email",""), request.form.get("dob",""), request.form.get("address",""), request.form.get("password","")
-    print(name,email,dob,address,password)
     numUsers = 0
     cursor = g.conn.execute("SELECT MAX(uid) from users")
     for res in cursor:
       numUsers = res['max']+1
     cursor.close()
 
-    cursor = g.conn.execute("INSERT into users values(%(uid)s, %(name)s, %(address)s, %(dob)s, %(email)s)", {'uid':numUsers, 'name':name, 'address':address, 'dob':dob, 'email':email})
-    cursor.close()
-
+    try:
+      cursor = g.conn.execute("INSERT into users values(%(uid)s, %(name)s, %(address)s, %(dob)s, %(email)s)", {'uid':numUsers, 'name':name, 'address':address, 'dob':dob, 'email':email})
+      cursor.close()
+    except:
+      return render_template('/signup.html')
+    
     return redirect('/login')
 
     
@@ -149,18 +151,25 @@ def home_post():
   print("request form", request.form)
   mid = request.form.get("Movie", "")
   vid = request.form.get("Venue", "")
+  print(mid,vid)
 
-  if(mid == "Choose Movie" and len(vid) > 0):
+  #Empty form
+  if(mid=="Choose Movie" and vid == "Choose Venue"):
+    return redirect("/home")
+
+  #Venue Entered
+  if(mid == "Choose Movie"):
     redirect_url = "venue_search/"+vid
     return redirect(redirect_url)
 
-  if(len(mid) > 0 and vid == "Choose Venue"):
+  #Movie Entered
+  if(vid == "Choose Venue"):
     redirect_url = "movie_info/"+mid
     return redirect(redirect_url)
 
-  if(len(mid) > 0 and len(vid) > 0):
-    redirect_url = "venue_search/"+vid+"/"+mid
-    return redirect(redirect_url)
+  #Both movie and venue entered
+  redirect_url = "venue_search/"+vid+"/"+mid
+  return redirect(redirect_url)
 
 
 
@@ -221,7 +230,7 @@ def movieInfo(mid):
     liked = 0
     
     if('id' in session):
-      cursor3 = g.conn.execute("SELECT COUNT(*) from Likes l where l.rid=%s and l.uid=%s",(result['rid'],session['id']))
+      cursor3 = g.conn.execute("SELECT COUNT(*) from Likes l where l.rid=%(rid)s and l.uid=%(uid(s",{'rid':result['rid'], 'uid':session['id']})
       for cnt in cursor3:
         if(cnt['count'] == 1): 
           liked = 1
@@ -298,14 +307,16 @@ def profile():
 @app.route('/write_review/<mid>', methods=['POST'])
 def writeReview(mid): 
   reviewText = request.form['review']
-  numReviews = 0
-  cursor = g.conn.execute("SELECT MAX(rid) from reviews")
-  for res in cursor:
-    numReviews = res['max']+1
-  cursor.close()
 
-  cursor = g.conn.execute("INSERT into reviews(rid,text,time,uid,mid) values (%(numReviews)s, %(reviewText)s, %(date)s, %(uid)s, %(mid)s)",{'numReviews':numReviews, 'reviewText':reviewText, 'date': date.today().isoformat(),'uid':session['id'], 'mid':mid})
-  cursor.close()
+  if(reviewText != ""):
+    numReviews = 0
+    cursor = g.conn.execute("SELECT MAX(rid) from reviews")
+    for res in cursor:
+      numReviews = res['max']+1
+    cursor.close()
+
+    cursor = g.conn.execute("INSERT into reviews(rid,text,time,uid,mid) values (%(numReviews)s, %(reviewText)s, %(date)s, %(uid)s, %(mid)s)",{'numReviews':numReviews, 'reviewText':reviewText, 'date': date.today().isoformat(),'uid':session['id'], 'mid':mid})
+    cursor.close()
   
   return redirect("/movie_info/{mid}".format(mid=mid))
   
@@ -434,10 +445,17 @@ def booking(mid, vid, theatrename, sid):
       available_seats.append(row)
     cursor.close()
     context = dict(data = available_seats, details = booking_details)
-    return render_template("booking.html", **context),{"Refresh": "30; url=/home"}
+    return render_template("booking.html", **context),{"Refresh": "300; url=/home"}
   if request.method == 'POST':
     result = request.form
     seatnumber = request.form.get("SeatNumber","")
+
+    #no seat selected
+    if(seatnumber == "Choose Seat"):
+      return redirect(request.url)
+
+
+    print(seatnumber)
     cursor = g.conn.execute("SELECT MAX(tid) FROM Ticket")
     for result in cursor:
       tid = result["max"] + 1
