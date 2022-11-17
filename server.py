@@ -17,6 +17,8 @@ import flask
 from flask import Flask, request, render_template, g, redirect, Response, session
 from datetime import date
 from datetime import date
+from psycopg2.extensions import AsIs
+
 
 
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
@@ -81,6 +83,25 @@ def teardown_request(exception):
   except Exception as e:
     pass
 
+@app.route('/signup', methods=['GET','POST'] )
+def signup():
+  if(request.method == 'POST'):
+    name,email,dob,address,password = request.form.get("name", ""), request.form.get("email",""), request.form.get("dob",""), request.form.get("address",""), request.form.get("password","")
+    print(name,email,dob,address,password)
+    numUsers = 0
+    cursor = g.conn.execute("SELECT MAX(uid) from users")
+    for res in cursor:
+      numUsers = res['max']+1
+    cursor.close()
+
+    cursor = g.conn.execute("INSERT into users values(%(uid)s, %(name)s, %(address)s, %(dob)s, %(email)s)", {'uid':numUsers, 'name':name, 'address':address, 'dob':dob, 'email':email})
+    cursor.close()
+
+    return redirect('/login')
+
+    
+  return render_template('/signup.html')
+  
 
 @app.route('/home')
 def home():
@@ -101,7 +122,7 @@ def home():
   famous_movie = []
   for result in cursor:
     mid = result["mid"]
-    cursor2 = g.conn.execute("SELECT name FROM Movie WHERE mid={mid}".format(mid=mid))
+    cursor2 = g.conn.execute("SELECT name FROM Movie WHERE mid=%s",(mid,))
     for res in cursor2:
       name = res["name"]
     famous_movie.append([mid, name, result["count"]])
@@ -112,7 +133,7 @@ def home():
   famous_venue = []
   for result in cursor:
     vid = result["vid"]
-    cursor2 = g.conn.execute("SELECT name, location FROM Venue WHERE vid={vid}".format(vid=vid))
+    cursor2 = g.conn.execute("SELECT name, location FROM Venue WHERE vid=%(vid)s",{'vid':vid})
     for res in cursor2:
       name = res["name"]
       location = res["location"]
@@ -128,7 +149,7 @@ def home_post():
   print("request form", request.form)
   mid = request.form.get("Movie", "")
   vid = request.form.get("Venue", "")
-  print(mid, vid)
+
   if(mid == "Choose Movie" and len(vid) > 0):
     redirect_url = "venue_search/"+vid
     return redirect(redirect_url)
@@ -187,20 +208,20 @@ def login_post():
 def movieInfo(mid):
 
   session['url'] = request.url
-  cursor = g.conn.execute("SELECT * from Movie M where M.mid = {mid}".format(mid=mid)) 
+  cursor = g.conn.execute("SELECT * from Movie M where M.mid = %(mid)s",{'mid':mid}) 
   data = []
   reviews = []
   for result in cursor:
     data.append(result)
   cursor.close()
 
-  cursor = g.conn.execute("SELECT r.rid, r.text, r.time, u.name from Reviews r NATURAL JOIN Users u WHERE r.mid={mid}".format(mid=mid))
+  cursor = g.conn.execute("SELECT r.rid, r.text, r.time, u.name from Reviews r NATURAL JOIN Users u WHERE r.mid=%(mid)s",{'mid':mid})
   for result in cursor:
-    cursor2 = g.conn.execute("SELECT COUNT(*) from Likes l where l.rid = {rid}".format(rid=result['rid']))
+    cursor2 = g.conn.execute("SELECT COUNT(*) from Likes l where l.rid = %s",(result['rid']))
     liked = 0
     
     if('id' in session):
-      cursor3 = g.conn.execute("SELECT COUNT(*) from Likes l where l.rid={rid} and l.uid={uid}".format(rid=result['rid'],uid=session['id']))
+      cursor3 = g.conn.execute("SELECT COUNT(*) from Likes l where l.rid=%s and l.uid=%s",(result['rid'],session['id']))
       for cnt in cursor3:
         if(cnt['count'] == 1): 
           liked = 1
@@ -211,7 +232,7 @@ def movieInfo(mid):
     reviews.append({'uname':result['name'], 'text':result['text'], 'time':result['time'], 'rid':result['rid'], 'numLikes':numLikes, 'liked':liked})
   cursor.close
   
-  cursor = g.conn.execute("SELECT genre FROM Movie where mid={mid}".format(mid=mid))
+  cursor = g.conn.execute("SELECT genre FROM Movie where mid=%(mid)s",{'mid':mid})
   genre_list = []
 
   for result in cursor:
@@ -220,14 +241,14 @@ def movieInfo(mid):
       genre_list = [word.strip() for word in genres.split(',')]
   reco_mid = []
   for genre in genre_list:
-    cursor = g.conn.execute("SELECT mid FROM Movie where genre like '%%{genre}%%'".format(genre=genre))
+    cursor = g.conn.execute("SELECT mid FROM Movie where genre like '%%%(genre)s%%'",{'genre':AsIs(genre)})
     for result in cursor:
       reco_mid.append(result["mid"])
   reco_mid = list(set(reco_mid))
   recos = []
   for rmid in reco_mid:
     if(int(rmid) != int(mid)):
-      cursor = g.conn.execute("SELECT name FROM Movie WHERE mid={mid}".format(mid=rmid))
+      cursor = g.conn.execute("SELECT name FROM Movie WHERE mid=%(mid)s",{'mid':rmid})
       for result in cursor:
         recos.append([rmid, result["name"]])
   cursor.close()
@@ -238,28 +259,32 @@ def movieInfo(mid):
 
 @app.route('/profile')
 def profile():
+  if('id' not in session):
+    return redirect('/login')
+
+    
   uid = session['id']
   bookings = []
   info = []
   reviews = []
   likedReviews = []
 
-  cursor = g.conn.execute("SELECT * from users WHERE uid={uid}".format(uid=uid))
+  cursor = g.conn.execute("SELECT * from users WHERE uid=%(uid)s",{'uid':uid})
   for res in cursor:
     info = {'name':res['name'], 'address':res['address'], 'dob':res['dob'], 'email':res['email']}
   cursor.close()
 
-  cursor = g.conn.execute("SELECT r.text, m.name FROM reviews r, movie m, likes l WHERE l.uid={uid} AND l.rid=r.rid".format(uid=uid))
+  cursor = g.conn.execute("SELECT r.text, m.name FROM reviews r, movie m, likes l WHERE l.uid=%(uid)s AND l.rid=r.rid",{'uid':uid})
   for res in cursor:
     likedReviews.append({'text':res['text'], 'moviename':res['name']})
   cursor.close()
   
-  cursor = g.conn.execute("SELECT r.text, r.time, m.name FROM reviews r NATURAL JOIN movie m WHERE r.uid={uid}".format(uid=uid))
+  cursor = g.conn.execute("SELECT r.text, r.time, m.name FROM reviews r NATURAL JOIN movie m WHERE r.uid=%(uid)s",{'uid':uid})
   for res in cursor:
     reviews.append({'text':res['text'], 'date':res['time'], 'moviename':res['name']})
   cursor.close()
 
-  cursor = g.conn.execute("SELECT distinct m.name AS moviename, v.name as venuename, t.time from movie m, venue v, ticket t WHERE m.mid = t.mid AND v.vid = t.vid AND t.uid = {uid}".format(uid=uid))
+  cursor = g.conn.execute("SELECT distinct m.name AS moviename, v.name as venuename, t.time from movie m, venue v, ticket t WHERE m.mid = t.mid AND v.vid = t.vid AND t.uid = %(uid)s",{'uid':uid})
   for res in cursor:
     bookings.append({'venue':res['venuename'], 'moviename':res['moviename'], 'time':res['time']})
   cursor.close()
@@ -279,15 +304,14 @@ def writeReview(mid):
     numReviews = res['max']+1
   cursor.close()
 
-  cursor = g.conn.execute("INSERT into reviews(rid,text,time,uid,mid) values ({rid}, '{text}', '{time}', {uid}, {mid})".format(rid=numReviews, text=reviewText, time=date.today().isoformat(), uid=session['id'], mid=mid))
+  cursor = g.conn.execute("INSERT into reviews(rid,text,time,uid,mid) values (%(numReviews)s, %(reviewText)s, %(date)s, %(uid)s, %(mid)s)",{'numReviews':numReviews, 'reviewText':reviewText, 'date': date.today().isoformat(),'uid':session['id'], 'mid':mid})
   cursor.close()
   
   return redirect("/movie_info/{mid}".format(mid=mid))
   
 @app.route('/like_review/<rid>/<mid>')
 def likeReview(rid,mid):
-  print(rid,mid)
-  cursor = g.conn.execute("INSERT into likes(rid,uid) values ({rid},{uid})".format(rid=rid,uid=session['id']))
+  cursor = g.conn.execute("INSERT into likes(rid,uid) values (%(rid)s,%(uid)s)",{'rid':rid,'uid':session['id']})
   cursor.close()
   return redirect("/movie_info/{mid}".format(mid=mid))
 
@@ -301,9 +325,9 @@ def add():
 
 
 @app.route('/venue_search')
-def venues_search():
+def venues_search(vid):
   session['url'] = request.url
-  cursor = g.conn.execute("SELECT T.date, M.name, T.starttime, theatrename, mid, vid, sid FROM Movie M NATURAL JOIN Shows S NATURAL JOIN Timing T WHERE vid={vid} ORDER BY T.date, M.name, theatrename, T.starttime ASC".format(vid=vid))
+  cursor = g.conn.execute("SELECT T.date, M.name, T.starttime, theatrename, mid, vid, sid FROM Movie M NATURAL JOIN Shows S NATURAL JOIN Timing T WHERE vid=%(vid)s ORDER BY T.date, M.name, theatrename, T.starttime ASC", {'vid':vid})
   venue_shows = []
   for result in cursor:
     link = [result["mid"], result["vid"], result["theatrename"], result["sid"]]
@@ -312,7 +336,7 @@ def venues_search():
   print(venue_shows)
   cursor.close()
   
-  cursor2 = g.conn.execute("SELECT location, name FROM Venue WHERE vid={vid}".format(vid=vid))
+  cursor2 = g.conn.execute("SELECT location, name FROM Venue WHERE vid=%(vid)s",{'vid':vid})
   venue_details = []
   for result in cursor2:
     venue_details.append(result["location"])
@@ -324,7 +348,7 @@ def venues_search():
 @app.route('/venue_search/<vid>')
 def venue_search(vid):
   session['url'] = request.url
-  cursor = g.conn.execute("SELECT T.date, M.name, T.starttime, theatrename, mid, vid, sid FROM Movie M NATURAL JOIN Shows S NATURAL JOIN Timing T WHERE vid={vid} ORDER BY T.date, M.name, theatrename, T.starttime ASC".format(vid=vid))
+  cursor = g.conn.execute("SELECT T.date, M.name, T.starttime, theatrename, mid, vid, sid FROM Movie M NATURAL JOIN Shows S NATURAL JOIN Timing T WHERE vid=%(vid)s ORDER BY T.date, M.name, theatrename, T.starttime ASC",{'vid':vid})
   venue_shows = []
   for result in cursor:
     link = [result["mid"], result["vid"], result["theatrename"], result["sid"]]
@@ -333,7 +357,7 @@ def venue_search(vid):
   print(venue_shows)
   cursor.close()
   
-  cursor2 = g.conn.execute("SELECT location, name FROM Venue WHERE vid={vid}".format(vid=vid))
+  cursor2 = g.conn.execute("SELECT location, name FROM Venue WHERE vid=%(vid)s",{'vid':vid})
   venue_details = []
   for result in cursor2:
     venue_details.append(result["location"])
@@ -345,7 +369,7 @@ def venue_search(vid):
 @app.route('/venue_search/<vid>/<mid>')
 def venue_movie_search(vid, mid):
   session['url'] = request.url
-  cursor = g.conn.execute("SELECT T.date, M.name, T.starttime, theatrename, mid, vid, sid FROM Movie M NATURAL JOIN Shows S NATURAL JOIN Timing T WHERE vid={vid} AND mid={mid} ORDER BY T.date, M.name, theatrename, T.starttime ASC".format(vid=vid, mid=mid))
+  cursor = g.conn.execute("SELECT T.date, M.name, T.starttime, theatrename, mid, vid, sid FROM Movie M NATURAL JOIN Shows S NATURAL JOIN Timing T WHERE vid=%(vid)s AND mid=%(mid)s ORDER BY T.date, M.name, theatrename, T.starttime ASC",{'vid':vid, 'mid':mid})
   venue_shows = []
   for result in cursor:
     link = [result["mid"], result["vid"], result["theatrename"], result["sid"]]
@@ -354,7 +378,7 @@ def venue_movie_search(vid, mid):
   print(venue_shows)
   cursor.close()
   
-  cursor2 = g.conn.execute("SELECT location, name FROM Venue WHERE vid={vid}".format(vid=vid))
+  cursor2 = g.conn.execute("SELECT location, name FROM Venue WHERE vid=%(vid)s",{'vid':vid})
   venue_details = []
   for result in cursor2:
     venue_details.append(result["location"])
@@ -366,7 +390,7 @@ def venue_movie_search(vid, mid):
 @app.route('/movie_search/<mid>')
 def movie_search(mid):
   session['url'] = request.url
-  cursor = g.conn.execute("SELECT T.date, V.name, theatrename, T.starttime, mid, vid, sid FROM Shows S NATURAL JOIN Timing T NATURAL JOIN Venue V WHERE mid ={mid} ORDER BY T.date, V.name, theatrename, T.starttime".format(mid=mid))
+  cursor = g.conn.execute("SELECT T.date, V.name, theatrename, T.starttime, mid, vid, sid FROM Shows S NATURAL JOIN Timing T NATURAL JOIN Venue V WHERE mid =%(mid)s ORDER BY T.date, V.name, theatrename, T.starttime",{'mid':mid})
   movie_shows = []
   for result in cursor:
     link = [result["mid"], result["vid"], result["theatrename"], result["sid"]]
@@ -375,7 +399,7 @@ def movie_search(mid):
   print(movie_shows)
   cursor.close()
   
-  cursor2 = g.conn.execute("SELECT name, description FROM Movie WHERE mid={mid}".format(mid=mid))
+  cursor2 = g.conn.execute("SELECT name, description FROM Movie WHERE mid=%(mid)s",{'mid':mid})
   movie_details = []
   for result in cursor2:
     movie_details.append(result["name"])
@@ -389,21 +413,21 @@ def movie_search(mid):
 def booking(mid, vid, theatrename, sid):
   session['url'] = request.url
   booking_details = []
-  cursor = g.conn.execute("SELECT name FROM Movie WHERE mid={mid}".format(mid=mid))
+  cursor = g.conn.execute("SELECT name FROM Movie WHERE mid=%s",(mid))
   for result in cursor:
     booking_details.append(result["name"])
-  cursor = g.conn.execute("SELECT name FROM Venue WHERE vid={vid}".format(vid=vid))
+  cursor = g.conn.execute("SELECT name FROM Venue WHERE vid=%s",(vid))
   for result in cursor:
     booking_details.append(result["name"])
   booking_details.append(theatrename)
-  cursor = g.conn.execute("SELECT date, starttime, endtime FROM Timing WHERE sid={sid}".format(sid=sid))
+  cursor = g.conn.execute("SELECT date, starttime, endtime FROM Timing WHERE sid=%s",(sid))
   for result in cursor:
     booking_details.append(result["date"])
     booking_details.append(result["starttime"])
     booking_details.append(result["endtime"])
   cursor.close()
   if request.method == 'GET':
-    cursor = g.conn.execute("SELECT seatnumber, price FROM SEAT  WHERE theatrename like '{theatrename}' AND vid={vid} EXCEPT SELECT seatnumber, price FROM SEAT NATURAL JOIN Ticket WHERE theatrename like '{theatrename}' AND vid={vid} ORDER BY price, seatnumber".format(theatrename=theatrename, vid=vid))
+    cursor = g.conn.execute("SELECT seatnumber, price FROM SEAT WHERE theatrename like %(theatreName)s AND vid=%(vid)s EXCEPT SELECT seatnumber, price FROM SEAT NATURAL JOIN Ticket WHERE theatrename like %(theatreName)s AND vid=%(vid)s ORDER BY price, seatnumber",{'theatreName':theatrename,'vid':vid, 'theatreName':theatrename, 'vid':vid})
     available_seats = []
     for result in cursor:
       row = [result["seatnumber"], result["price"]]
@@ -421,7 +445,7 @@ def booking(mid, vid, theatrename, sid):
     print("TID")
     print(tid)
     uid = session['id']
-    g.conn.execute("INSERT INTO Ticket (tid, time, seatnumber, theatrename, vid, sid, mid, uid) VALUES ({tid}, '{time}', {seatnumber}, '{theatrename}', {vid}, {sid}, {mid}, {uid})".format(tid=tid, time=date.today(), seatnumber=seatnumber, theatrename=theatrename, vid=vid, sid=sid, mid=mid, uid=uid))
+    g.conn.execute("INSERT INTO Ticket (tid, time, seatnumber, theatrename, vid, sid, mid, uid) VALUES (%(ticketId)s, %(date)s, %(seatNumber)s, %(theatreName)s, %(vid)s, %(sid)s, %(mid)s, %(uid)s)",{'ticketId':tid, 'date':date.today(), 'seatNumber':seatnumber, 'theatreName':theatrename, 'vid':vid, 'sid':sid, 'mid':mid, 'uid':uid})
     booking_details.append(seatnumber)
     context = dict(details = booking_details)
     return render_template("booking_complete.html",**context)
@@ -452,7 +476,7 @@ if __name__ == "__main__":
     """
 
     HOST, PORT = host, port
-    print("running on %s:%d" % (HOST, PORT))
+    print("running on %s:%s" % (HOST, PORT))
     app.run(host=HOST, port=PORT, debug=debug, threaded=threaded)
 
   run()
