@@ -274,7 +274,7 @@ def profile():
     info = {'name':res['name'], 'address':res['address'], 'dob':res['dob'], 'email':res['email']}
   cursor.close()
 
-  cursor = g.conn.execute("SELECT r.text, m.name FROM reviews r, movie m, likes l WHERE l.uid=%(uid)s AND l.rid=r.rid",{'uid':uid})
+  cursor = g.conn.execute("SELECT r.text, m.name FROM reviews r, movie m, likes l WHERE l.uid=%(uid)s AND l.rid=r.rid AND r.mid = m.mid",{'uid':uid})
   for res in cursor:
     likedReviews.append({'text':res['text'], 'moviename':res['name']})
   cursor.close()
