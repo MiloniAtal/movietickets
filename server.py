@@ -445,7 +445,7 @@ def booking(mid, vid, theatrename, sid):
       available_seats.append(row)
     cursor.close()
     context = dict(data = available_seats, details = booking_details)
-    return render_template("booking.html", **context),{"Refresh": "300; url=/home"}
+    return render_template("booking.html", **context),{"Refresh": "30; url=/home"}
   if request.method == 'POST':
     result = request.form
     seatnumber = request.form.get("SeatNumber","")
