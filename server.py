@@ -230,7 +230,7 @@ def movieInfo(mid):
     liked = 0
     
     if('id' in session):
-      cursor3 = g.conn.execute("SELECT COUNT(*) from Likes l where l.rid=%(rid)s and l.uid=%(uid(s",{'rid':result['rid'], 'uid':session['id']})
+      cursor3 = g.conn.execute("SELECT COUNT(*) from Likes l where l.rid=%(rid)s and l.uid=%(uid)s",{'rid':result['rid'], 'uid':session['id']})
       for cnt in cursor3:
         if(cnt['count'] == 1): 
           liked = 1
